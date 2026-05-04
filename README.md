@@ -64,3 +64,7 @@ Cliente manda msg no WhatsApp
 - [ ] Suporte a áudio → speech-to-text → texto → agente
 - [ ] Suporte a imagem → leitura de lista escolar via Claude Vision
 - [ ] Integrar CRM: criar lead no HubSpot quando handoff for detectado
+
+---
+
+> **Última atualização:** 2026-05-04
