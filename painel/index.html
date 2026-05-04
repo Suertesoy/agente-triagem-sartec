@@ -211,6 +211,13 @@
       padding-bottom: 8px;
     }
     .card.dragging { opacity: .45; pointer-events: none; }
+    .drag-line {
+      height: 3px;
+      background: var(--brand-navy);
+      border-radius: 2px;
+      margin: 2px 0;
+      pointer-events: none;
+    }
 
     /* Coluna resolvidos — visual mais discreto */
     .pipe-col.col-resolvido .pipe-col-label { opacity: .65; }
@@ -270,6 +277,19 @@
       border-left-color: #d97706;
       background: linear-gradient(to right, #fffbeb 0%, var(--bg-card) 25%);
     }
+    .card.pri-alta  { border-left-color: #ea580c; background: linear-gradient(to right, #fff7ed 0%, var(--bg-card) 25%); }
+    .card.pri-media { border-left-color: #ca8a04; background: linear-gradient(to right, #fefce8 0%, var(--bg-card) 25%); }
+
+    .priority-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; cursor: pointer; display: inline-block;
+    }
+    .priority-dot.pb-critica { background: #dc2626; }
+    .priority-dot.pb-alta    { background: #ea580c; }
+    .priority-dot.pb-media   { background: #ca8a04; }
+    .priority-dot.pb-baixa   { background: #94a3b8; }
+    .priority-dot.pri-manual { outline: 1.5px dashed currentColor; outline-offset: 2px; }
+
     .card.forgotten {
       border-left-color: #991b1b;
       background: linear-gradient(to right, #fef2f2 0%, var(--bg-card) 30%);
@@ -2284,6 +2304,8 @@ let countdownTimer  = null;
 let convsPollTimer  = null;
 let resolveCallback = null;   // callback para o confirm modal
 let _dragPhone = null, _dragClientType = null;
+let _dragInsertAfter = null;
+const _colOrder = {};
 let _priPickerPhone = null;
 
 // mídia modal
@@ -2560,6 +2582,13 @@ function renderPipelineTab(tabId, cols, convs) {
     const cards = byCol[col.key] || [];
     // Ordena por prioridade (crítica primeiro) e depois por tempo de espera
     cards.sort((a, b) => {
+      if (_colOrder[col.key]?.length) {
+        const order = _colOrder[col.key];
+        const ia = order.indexOf(a.phone), ib = order.indexOf(b.phone);
+        if (ia !== -1 || ib !== -1) {
+          if (ia === -1) return 1; if (ib === -1) return -1; return ia - ib;
+        }
+      }
       const pa = PRIORITY_ORDER[computePriority(a).level] ?? 3;
       const pb = PRIORITY_ORDER[computePriority(b).level] ?? 3;
       if (pa !== pb) return pa - pb;
@@ -2580,9 +2609,28 @@ function renderPipelineTab(tabId, cols, convs) {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       colEl.classList.add("drag-over");
+      if (colEl.dataset.colResolved !== "1") {
+        const fromKey = allConvs.find(c => c.phone === _dragPhone)?.pipelineStatus || "novo";
+        if (fromKey === colEl.dataset.colKey) {
+          const allCards = [...cardsEl.querySelectorAll(".card:not(.dragging)")];
+          let insertAfter = null;
+          for (const cd of allCards) {
+            const { top, height } = cd.getBoundingClientRect();
+            if (e.clientY > top + height / 2) insertAfter = cd.dataset.phone || null;
+          }
+          _dragInsertAfter = insertAfter;
+          let line = cardsEl.querySelector(".drag-line");
+          if (!line) { line = document.createElement("div"); line.className = "drag-line"; }
+          const afterEl = insertAfter ? cardsEl.querySelector(`.card[data-phone="${insertAfter}"]`) : null;
+          if (afterEl) afterEl.after(line); else cardsEl.prepend(line);
+        }
+      }
     });
     colEl.addEventListener("dragleave", (e) => {
-      if (!colEl.contains(e.relatedTarget)) colEl.classList.remove("drag-over");
+      if (!colEl.contains(e.relatedTarget)) {
+        colEl.classList.remove("drag-over");
+        cardsEl.querySelector(".drag-line")?.remove();
+      }
     });
     colEl.addEventListener("drop", async (e) => {
       e.preventDefault();
@@ -2595,7 +2643,19 @@ function renderPipelineTab(tabId, cols, convs) {
       const isResolvedCol = colEl.dataset.colResolved === "1";
       const conv = allConvs.find(c => c.phone === phone);
       if (!conv || conv.status === "resolvido") return;
-      if ((conv.pipelineStatus || "novo") === targetKey && !isResolvedCol) return;
+      if ((conv.pipelineStatus || "novo") === targetKey && !isResolvedCol) {
+        const siblings = allConvs
+          .filter(c => (c.pipelineStatus || "novo") === targetKey && c.status !== "resolvido" && c.phone !== phone)
+          .map(c => c.phone);
+        const insertIdx = _dragInsertAfter ? siblings.indexOf(_dragInsertAfter) + 1 : 0;
+        const newOrder = [...siblings];
+        newOrder.splice(Math.max(0, insertIdx), 0, phone);
+        _colOrder[targetKey] = newOrder;
+        _dragInsertAfter = null;
+        cardsEl.querySelector(".drag-line")?.remove();
+        renderPipeline(allConvs);
+        return;
+      }
       if (isResolvedCol) {
         quickResolveCard(phone);
       } else {
@@ -2650,13 +2710,16 @@ function buildCard(c, col, cols) {
   const forgotten = isWaiting && waitMs > 120 * 60 * 1000;
   const urgent    = isWaiting && waitMs > 30 * 60 * 1000 && !forgotten;
   const warn10    = isWaiting && waitMs > 10 * 60 * 1000 && waitMs <= 30 * 60 * 1000;
-  const windowOpen = !c.conversationWindowStatus || c.conversationWindowStatus === "open";
 
   const card = document.createElement("div");
+  card.dataset.phone = c.phone;
+  const priority = computePriority(c);
   let cls = "card";
   if (forgotten)       cls += " forgotten";
   else if (urgent)     cls += " urgent";
   else if (warn10)     cls += " warn-10";
+  else if (priority.level === "alta" || priority.level === "critica") cls += " pri-alta";
+  else if (priority.level === "media") cls += " pri-media";
   if (isResolved) cls += " resolvido";
   if (isIncomplete) cls += " triagem_incompleta";
   card.className = cls;
@@ -2667,14 +2730,13 @@ function buildCard(c, col, cols) {
   ).join("");
 
   const cardTitle  = c.cardTitle || "";
-  const priority   = computePriority(c);
   const isManual   = !!c.priorityManual;
   const priBadge   = `<span
-    class="priority-badge ${priority.cls || 'pb-baixa'}${isManual ? ' pri-manual' : ''}"
+    class="priority-dot ${priority.cls || 'pb-baixa'}${isManual ? ' pri-manual' : ''}"
     data-phone="${esc(c.phone)}"
     onclick="event.stopPropagation();openPriorityPicker(event,'${esc(c.phone)}')"
-    title="${isManual ? 'Prioridade manual — clique para alterar' : 'Prioridade automática — clique para definir'}"
-  >${priority.label}</span>`;
+    title="${priority.label}${isManual ? ' (manual)' : ' (auto)'} — clique para alterar"
+  ></span>`;
 
   card.innerHTML = `
     <div class="card-top">
@@ -2696,10 +2758,6 @@ function buildCard(c, col, cols) {
       onblur="saveCardField(this,'cardTitle')"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
       title="${cardTitle ? esc(cardTitle) + ' — clique para editar' : 'Clique para adicionar resumo do pedido'}">${esc(cardTitle)}</div>
-
-    ${c.lastMessage && !isResolved
-      ? `<div class="card-last-msg" title="${esc(c.lastMessage)}">"${esc(c.lastMessage.substring(0, 55))}${c.lastMessage.length > 55 ? '…' : ''}"</div>`
-      : ""}
 
     <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:2px">
       <select class="demand-select ${demandClass(c.demandType)}"
@@ -2735,27 +2793,6 @@ function buildCard(c, col, cols) {
       }
     </div>
 
-    ${!isResolved
-      ? `<div class="card-quick-row" onclick="event.stopPropagation()">
-           <button class="btn-qr btn-qr-resolve"
-             onclick="quickResolveCard('${esc(c.phone)}')"
-             title="Resolver esta conversa">✓ Resolver</button>
-           ${windowOpen
-             ? `<button class="btn-qr" onclick="openQuickReply('${esc(c.phone)}')" title="Resposta rápida">↩ Responder</button>`
-             : `<button class="btn-qr" disabled title="Janela fechada — use template">↩ Responder</button>`}
-         </div>
-         ${windowOpen
-           ? `<div class="card-quick-reply hidden" data-phone="${esc(c.phone)}" onclick="event.stopPropagation()">
-                <textarea class="qr-input" data-phone="${esc(c.phone)}" placeholder="Mensagem rápida..." rows="2"
-                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendQuickReply('${esc(c.phone)}')}"></textarea>
-                <div class="qr-row">
-                  <button class="qr-cancel" onclick="closeQuickReply('${esc(c.phone)}')">Cancelar</button>
-                  <button class="qr-send" data-phone="${esc(c.phone)}" onclick="sendQuickReply('${esc(c.phone)}')">Enviar</button>
-                </div>
-              </div>`
-           : ""}`
-      : ""}
-
     <div class="card-footer">
       <span>${c.messageCount} msgs</span>
       ${isResolved && c.resolvedAt ? `<span>Resolvido ${relTime(c.resolvedAt)}</span>` : ""}
@@ -2773,6 +2810,8 @@ function buildCard(c, col, cols) {
     card.addEventListener("dragend", () => {
       card.classList.remove("dragging");
       _dragPhone = null;
+      _dragInsertAfter = null;
+      document.querySelectorAll(".drag-line").forEach(el => el.remove());
     });
   }
 
