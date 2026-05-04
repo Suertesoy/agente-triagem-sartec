@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sartec — Acesso ao Painel</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a2a5e 0%, #0f1a3e 100%);
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+      transition: transform .18s ease;
+    }
+
+    .login-card.shake {
+      animation: shake .4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-6px); }
+      80%       { transform: translateX(6px); }
+    }
+
+    @keyframes fade-out {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(.96); }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo-brand {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #1a2a5e;
+      letter-spacing: .03em;
+      line-height: 1;
+    }
+
+    .logo-sub {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #cc2222;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      font-size: .82rem;
+      color: #9aa0b4;
+      margin-bottom: 32px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 700;
+      color: #5a6380;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 7px;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1.5px solid #e2e6f0;
+      border-radius: 10px;
+      padding: 11px 15px;
+      font-family: inherit;
+      font-size: .95rem;
+      color: #1a1a2e;
+      outline: none;
+      transition: border-color .15s;
+      background: #fafbfd;
+      letter-spacing: .12em;
+    }
+
+    .form-group input:focus {
+      border-color: #1a2a5e;
+      background: #fff;
+    }
+
+    .error-msg {
+      font-size: .78rem;
+      color: #cc2222;
+      margin-top: 8px;
+      min-height: 18px;
+      font-weight: 600;
+    }
+
+    .btn-login {
+      width: 100%;
+      background: #1a2a5e;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      letter-spacing: .04em;
+      transition: background .15s, transform .1s;
+    }
+
+    .btn-login:hover  { background: #cc2222; }
+    .btn-login:active { transform: scale(.98); }
+    .btn-login:disabled { opacity: .5; cursor: default; }
+  </style>
+</head>
+<body>
+
+<div class="login-card" id="card">
+  <div class="logo">
+    <div class="logo-brand">SARTEC</div>
+    <div class="logo-sub">Papelaria</div>
+  </div>
+  <div class="login-subtitle">Painel de Atendimento</div>
+
+  <form id="login-form" onsubmit="doLogin(event)">
+    <div class="form-group">
+      <label for="pwd">Senha de acesso</label>
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password" autofocus />
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+    <button type="submit" class="btn-login" id="btn-login">Entrar</button>
+  </form>
+</div>
+
+<script>
+  const PANEL_PASSWORD = "sartec2026";
+
+  // Se já autenticado, vai direto para o painel
+  if (sessionStorage.getItem("sartec_auth") === "true") {
+    location.replace("index.html");
+  }
+
+  function doLogin(e) {
+    e.preventDefault();
+    const pwd    = document.getElementById("pwd").value;
+    const card   = document.getElementById("card");
+    const errMsg = document.getElementById("error-msg");
+    const btn    = document.getElementById("btn-login");
+
+    if (pwd === PANEL_PASSWORD) {
+      sessionStorage.setItem("sartec_auth", "true");
+      btn.disabled  = true;
+      btn.textContent = "Entrando...";
+      // Fade out suave antes de redirecionar
+      card.style.animation = "fade-out .3s ease forwards";
+      setTimeout(() => location.replace("index.html"), 300);
+    } else {
+      // Shake + mensagem de erro
+      errMsg.textContent = "Senha incorreta. Tente novamente.";
+      card.classList.remove("shake");
+      void card.offsetWidth; // reflow para reiniciar a animação
+      card.classList.add("shake");
+      document.getElementById("pwd").value = "";
+      document.getElementById("pwd").focus();
+      setTimeout(() => errMsg.textContent = "", 3000);
+    }
+  }
+</script>
+</body>
+</html>

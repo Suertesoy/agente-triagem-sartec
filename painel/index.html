@@ -1,0 +1,4013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sartec Papelaria — Painel</title>
+  <style>
+    /* ══════════════════════════════════════════════════
+       RESET + VARIÁVEIS
+    ══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-navy:       #1a2a5e;
+      --brand-navy-mid:   #243880;
+      --brand-red:        #cc2222;
+      --brand-red-dark:   #a31b1b;
+      --brand-white:      #ffffff;
+      --bg-main:          #f0f2f7;
+      --bg-card:          #ffffff;
+      --bg-sidebar:       #f8f9fc;
+      --text-primary:     #1a1a2e;
+      --text-secondary:   #5a6380;
+      --text-muted:       #9aa0b4;
+      --border:           #e2e6f0;
+      --status-novo:      #3b82f6;
+      --status-atend:     #f59e0b;
+      --status-orc:       #8b5cf6;
+      --status-confirm:   #10b981;
+      --status-final:     #6b7280;
+      --status-resolvido: #d1d5db;
+      --pf-color:         #0ea5e9;
+      --pj-color:         #8b5cf6;
+      --warn-color:       #f59e0b;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════════ */
+    .top-header {
+      background: var(--brand-navy);
+      color: #fff;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 300;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    .brand { display: flex; flex-direction: column; line-height: 1.1; }
+    .brand-name { font-size: .95rem; font-weight: 900; letter-spacing: .06em; }
+    .brand-sub  { font-size: .65rem; opacity: .6; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; }
+
+    .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,.2); flex-shrink: 0; }
+
+    .waiting-counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      opacity: .9;
+    }
+    .waiting-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--brand-red);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-dot {
+      0%,100% { transform: scale(1);   opacity: 1; }
+      50%     { transform: scale(1.4); opacity: .7; }
+    }
+
+    .refresh-info { margin-left: auto; font-size: .7rem; opacity: .55; }
+
+    .btn-logout {
+      background: rgba(255,255,255,.12);
+      border: none;
+      color: #fff;
+      padding: 5px 13px;
+      border-radius: 7px;
+      font-size: .75rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.22); }
+
+    /* ══════════════════════════════════════════════════
+       TAB BAR
+    ══════════════════════════════════════════════════ */
+    .tab-bar {
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+      padding: 0 16px;
+      display: flex;
+      gap: 2px;
+    }
+    .tab-btn {
+      padding: 11px 22px;
+      border: none;
+      background: none;
+      font-size: .86rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active { color: var(--brand-navy); border-bottom-color: var(--brand-navy); }
+    .tab-btn:hover:not(.active) { color: var(--text-primary); }
+    .tab-btn .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--brand-red);
+      color: #fff;
+      font-size: .62rem;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+    .tab-btn .tab-badge:empty { display: none; }
+
+    /* ══════════════════════════════════════════════════
+       VIEWS
+    ══════════════════════════════════════════════════ */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ══════════════════════════════════════════════════
+       PIPELINE
+    ══════════════════════════════════════════════════ */
+    .pipeline-wrap {
+      overflow-x: auto;
+      padding: 16px 14px 24px;
+    }
+    .pipeline {
+      display: flex;
+      gap: 12px;
+      min-width: max-content;
+    }
+    .pipe-col { width: 272px; flex-shrink: 0; display: flex; flex-direction: column; }
+
+    .pipe-col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 6px 10px;
+    }
+    .pipe-col-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pipe-col-label {
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-secondary);
+    }
+    .pipe-col-count {
+      margin-left: auto;
+      font-size: .65rem;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text-secondary);
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    .pipe-col-count.has-urgent { background: #fee2e2; color: var(--brand-red); }
+
+    .pipe-col-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 60px;
+    }
+
+    /* Coluna resolvidos — visual mais discreto */
+    .pipe-col.col-resolvido .pipe-col-label { opacity: .65; }
+
+    .empty-col {
+      font-size: .75rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 18px 0;
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+    }
+
+    .empty-pipeline {
+      background: #fff;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: .9rem;
+      width: 280px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       CARDS
+    ══════════════════════════════════════════════════ */
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 13px 15px 11px;
+      border-left: 4px solid var(--brand-navy);
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      transition: box-shadow .15s, transform .1s;
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      word-break: break-word;
+      box-sizing: border-box;
+    }
+    .card:hover { box-shadow: 0 5px 16px rgba(0,0,0,.12); transform: translateY(-1px); }
+
+    .card.urgent {
+      border-left-color: var(--brand-red);
+      animation: pulse-border 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+      0%,100% { border-left-color: var(--brand-red); }
+      50%     { border-left-color: #ff6666; }
+    }
+
+    .card.resolvido {
+      opacity: .72;
+      border-left-color: var(--status-resolvido);
+    }
+    .card.triagem_incompleta { border-left-color: var(--warn-color); }
+
+    /* ─ Card top ─ */
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .type-badge {
+      font-size: .58rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+    .type-badge.pf { background: #e0f2fe; color: #0369a1; }
+    .type-badge.pj { background: #ede9fe; color: #6d28d9; }
+
+    /* Nome editável inline */
+    .card-name {
+      font-weight: 700;
+      font-size: .88rem;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: text;
+      border-radius: 4px;
+      padding: 1px 3px;
+      transition: background .1s;
+    }
+    .card-name:hover  { background: #f0f4ff; }
+    .card-name:focus  { background: #fff; outline: 2px solid var(--brand-navy); white-space: normal; overflow: visible; }
+
+    .card-time {
+      font-size: .66rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .card-time.urgent { color: var(--brand-red); font-weight: 700; }
+
+    /* ─ Card title editável — único resumo do pedido ─ */
+    .card-title {
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+      cursor: text;
+      border-radius: 4px;
+      padding: 2px 3px;
+      transition: background .1s;
+      /* Permite duas linhas antes de truncar */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+    .card-title:hover { background: #f0f4ff; }
+    .card-title:focus {
+      background: #fff;
+      outline: 2px solid var(--brand-navy);
+      display: block;        /* remove clamp no foco */
+      overflow: visible;
+    }
+    .card-title:empty::before {
+      content: "Clique para adicionar resumo...";
+      color: var(--text-muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* ─ Tags ─ */
+    .demand-tag {
+      display: inline-block;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      margin-bottom: 8px;
+    }
+    .dt-lista      { background: #dbeafe; color: #1d4ed8; }
+    .dt-cotacao_pj { background: #ede9fe; color: #6d28d9; }
+    .dt-xerox      { background: #ffedd5; color: #c2410c; }
+    .dt-produto    { background: #dcfce7; color: #15803d; }
+    .dt-duvida     { background: #fef9c3; color: #a16207; }
+    .dt-outro      { background: #f1f5f9; color: #64748b; }
+
+    .tag-sem-resp {
+      display: inline-block;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: #fef9c3;
+      color: #a16207;
+      margin-left: 4px;
+    }
+
+    /* ─ Card actions ─ */
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    /* Linha interna de selects */
+    .card-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status-select, .type-select {
+      font-size: .7rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px 6px;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      cursor: pointer;
+      outline: none;
+      transition: border-color .15s;
+      min-width: 0;
+    }
+    .status-select { flex: 1; }
+    .type-select   { flex-shrink: 0; }
+    .status-select:focus, .type-select:focus { border-color: var(--brand-navy); }
+
+    /* Botão Abrir — linha própria, largura completa */
+    .btn-open {
+      font-size: .75rem;
+      font-weight: 700;
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+      width: 100%;
+      text-align: center;
+      letter-spacing: .02em;
+    }
+    .btn-open:hover { background: var(--brand-navy-mid); }
+
+    .btn-reopen {
+      font-size: .7rem;
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #86efac;
+      border-radius: 7px;
+      padding: 5px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex: 1;
+      text-align: center;
+    }
+    .btn-reopen:hover { background: #dcfce7; }
+
+    /* ─ Card footer ─ */
+    .card-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 7px;
+      font-size: .65rem;
+      color: var(--text-muted);
+    }
+
+    /* Demand dropdown inline no card */
+    .demand-select {
+      display: inline-block;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      outline: none;
+      max-width: 130px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       ABA CONVERSAS (split pane)
+    ══════════════════════════════════════════════════ */
+    #view-convs.active {
+      display: flex;
+      height: calc(100vh - 56px - 46px); /* viewport - header - tabbar */
+    }
+
+    .convs-sidebar {
+      width: 300px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .convs-search {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .convs-search input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: .82rem;
+      outline: none;
+      background: #fff;
+    }
+    .convs-search input:focus { border-color: var(--brand-navy); }
+
+    .convs-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conv-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .12s;
+      display: flex;
+      gap: 9px;
+      align-items: center;   /* avatar e meta ficam centralizados */
+      position: relative;
+    }
+    .conv-item:hover   { background: #eff2fb; }
+    .conv-item.active  { background: #e8edf9; }
+
+    .conv-avatar-wrap { position: relative; flex-shrink: 0; }
+    .conv-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--brand-navy);
+      color: #fff;
+      font-weight: 700;
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .conv-avatar.pj { background: var(--pj-color); }
+
+    .conv-info { flex: 1; min-width: 0; }
+
+    /* Linha nome + timestamp (estilo WhatsApp Web) */
+    .conv-name-row {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+    .conv-name {
+      font-size: .84rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+    .conv-time {
+      font-size: .62rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .conv-preview {
+      font-size: .73rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .conv-meta { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+
+    .convs-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .convs-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+    .convs-empty-icon { font-size: 3rem; opacity: .4; }
+    .convs-empty-text { font-size: .88rem; }
+
+    /* ══════════════════════════════════════════════════
+       CHAT MODAL (pipeline "Abrir")
+    ══════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      height: 86vh;
+      max-height: 800px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,.3);
+    }
+
+    .modal-header {
+      background: var(--brand-navy);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .modal-header .info { flex: 1; min-width: 0; }
+    .modal-header h2 {
+      font-size: .9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .modal-header .info-sub {
+      font-size: .7rem;
+      opacity: .75;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .modal-hdr-btn {
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      padding: 5px 11px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: .78rem;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .modal-hdr-btn:hover { background: rgba(255,255,255,.28); }
+    .btn-resolve-modal { background: var(--brand-red) !important; font-weight: 700; }
+    .btn-resolve-modal:hover { background: var(--brand-red-dark) !important; }
+
+    /* ── Barra de status da janela de 24h ── */
+    .window-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      font-size: .78rem;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .window-status-bar.ws-open    { background: #f0fdf4; color: #15803d; }
+    .window-status-bar.ws-closed  { background: #fff1f2; color: #b91c1c; }
+    .window-status-bar.ws-waiting { background: #fffbeb; color: #b45309; }
+    .window-status-bar.ws-unknown { display: none; }
+    .ws-icon   { font-size: .95rem; flex-shrink: 0; line-height: 1; }
+    .ws-label  { font-weight: 700; }
+    .ws-detail { font-size: .7rem; font-weight: 400; opacity: .8; }
+
+    /* ── Lock do compositor quando janela fechada ── */
+    .composer-lock-bar {
+      padding: 10px 14px;
+      background: #fff8f0;
+      border-top: 2px solid #fed7aa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .8rem;
+      color: #9a3412;
+      flex-shrink: 0;
+    }
+    .composer-lock-bar.ws-waiting-lock {
+      background: #fffbeb;
+      border-top-color: #fde68a;
+      color: #92400e;
+    }
+    .composer-lock-bar span { flex: 1; }
+    .btn-send-template {
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 6px 13px;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .btn-send-template:hover { background: var(--brand-navy-mid); }
+
+    /* ── Dados do pedido ── */
+    .dados-pedido {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .dados-pedido summary {
+      padding: 9px 16px;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--brand-navy);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dados-pedido summary::before { content: "▶"; font-size: .6rem; transition: transform .2s; }
+    .dados-pedido[open] summary::before { transform: rotate(90deg); }
+    .dados-pedido summary::-webkit-details-marker { display: none; }
+
+    .dados-form {
+      padding: 0 16px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+    }
+    .form-row { display: flex; flex-direction: column; gap: 4px; }
+    .form-row.full { grid-column: 1 / -1; }
+    .form-row label {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-family: inherit;
+      font-size: .82rem;
+      outline: none;
+      background: #fafafa;
+      transition: border-color .15s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: var(--brand-navy);
+      background: #fff;
+    }
+    .form-row textarea { resize: vertical; min-height: 52px; }
+    .dados-save-row { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+    .btn-save {
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 20px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-save:hover { background: var(--brand-navy-mid); }
+    .btn-save.saved { background: #16a34a; }
+
+    /* ── Mensagens ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .bubble-wrap { display: flex; flex-direction: column; max-width: 78%; }
+    .bubble-wrap.left  { align-self: flex-start; align-items: flex-start; }
+    .bubble-wrap.right { align-self: flex-end;   align-items: flex-end;   }
+
+    .bubble {
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-size: .85rem;
+      line-height: 1.45;
+      word-break: break-word;
+      max-width: 100%;
+    }
+    .bubble.client  { background: #ececec; border-bottom-left-radius: 4px; }
+    .bubble.bot     { background: #cfe3ff; color: #1a3a6b; border-bottom-right-radius: 4px; }
+    .bubble.human   { background: var(--brand-navy); color: #fff; border-bottom-right-radius: 4px; }
+    .bubble.optimistic { opacity: .62; }
+
+    .bubble-label { font-size: .62rem; color: var(--text-secondary); margin-top: 2px; padding: 0 3px; }
+    .bubble-time  { font-size: .58rem; color: var(--text-muted); margin-top: 1px; padding: 0 3px; }
+
+    /* ── Mídia nas bolhas ── */
+    .bubble-img {
+      max-width: 220px;
+      max-height: 220px;
+      border-radius: 8px;
+      display: block;
+      cursor: pointer;
+      margin-top: 4px;
+      object-fit: cover;
+      transition: opacity .15s;
+    }
+    .bubble-img:hover { opacity: .88; }
+
+    .media-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,.06);
+      border-radius: 9px;
+      padding: 9px 12px;
+      margin-top: 4px;
+      min-width: 190px;
+    }
+    .media-card .media-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .media-card .media-info { flex: 1; min-width: 0; }
+    .media-card .media-name {
+      font-size: .75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .media-card .media-actions { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+    .btn-media {
+      font-size: .68rem;
+      padding: 3px 9px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: rgba(0,0,0,.1);
+      color: inherit;
+      font-weight: 600;
+    }
+    .btn-media:hover { background: rgba(0,0,0,.18); }
+
+    /* ── Compositor ── */
+    .composer {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 8px 10px;
+      flex-shrink: 0;
+    }
+    .img-preview-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .img-preview-bar.visible { display: flex; }
+    .img-preview-bar img { height: 50px; width: 50px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); }
+    .caption-input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-size: .8rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .caption-input:focus { border-color: var(--brand-navy); }
+    .btn-clear-img {
+      background: none; border: none;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .composer-row { display: flex; gap: 7px; align-items: flex-end; }
+    .btn-attach {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-attach:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
+
+    .composer-row textarea {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-family: inherit;
+      font-size: .88rem;
+      resize: none;
+      min-height: 38px;
+      max-height: 110px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .composer-row textarea:focus { border-color: var(--brand-navy); }
+
+    .btn-send {
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 16px;
+      height: 38px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: .88rem;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .btn-send:hover    { background: var(--brand-navy-mid); }
+    .btn-send:disabled { opacity: .4; cursor: default; }
+
+    /* ══════════════════════════════════════════════════
+       MEDIA MODAL (imagem fullscreen)
+    ══════════════════════════════════════════════════ */
+    #media-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 700;
+      background: rgba(0,0,0,.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    #media-modal.hidden { display: none; }
+    #media-modal-img {
+      max-width: 90vw;
+      max-height: 80vh;
+      border-radius: 8px;
+      cursor: zoom-in;
+      transition: transform .2s;
+      transform-origin: center;
+    }
+    .media-modal-btns { display: flex; gap: 12px; }
+    .media-modal-btns button {
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .88rem;
+      transition: background .15s;
+    }
+    .media-modal-btns button:hover { background: rgba(255,255,255,.28); }
+
+    /* ══════════════════════════════════════════════════
+       CONFIRM MODAL
+    ══════════════════════════════════════════════════ */
+    #confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #confirm-modal.hidden { display: none; }
+    .confirm-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 28px 22px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,.25);
+    }
+    .confirm-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .confirm-box p  { font-size: .85rem; color: var(--text-secondary); margin-bottom: 20px; }
+    .confirm-box .confirm-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-confirm-cancel {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: .84rem;
+      cursor: pointer;
+    }
+    .btn-confirm-ok {
+      background: var(--brand-red);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: .84rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-confirm-ok:hover { background: var(--brand-red-dark); }
+
+    /* ══════════════════════════════════════════════════
+       MODAL DE TEMPLATE WHATSAPP
+    ══════════════════════════════════════════════════ */
+    #template-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 700;
+      background: rgba(0,0,0,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(1px);
+    }
+    #template-modal.hidden { display: none; }
+
+    .tmpl-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.28);
+    }
+    .tmpl-hdr {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .tmpl-hdr-info { flex: 1; min-width: 0; }
+    .tmpl-hdr-title { font-size: .95rem; font-weight: 800; color: var(--text-primary); }
+    .tmpl-hdr-sub   { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
+    .tmpl-close {
+      background: none; border: none; font-size: 1rem;
+      cursor: pointer; color: var(--text-muted);
+      padding: 3px 7px; border-radius: 5px; flex-shrink: 0;
+    }
+    .tmpl-close:hover { background: var(--bg-main); }
+
+    .tmpl-options {
+      padding: 14px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+    .tmpl-card {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: border-color .14s, background .12s;
+    }
+    .tmpl-card:hover { border-color: var(--brand-navy); background: #f7f9ff; }
+    .tmpl-card.selected { border-color: var(--brand-navy); background: #eef1fb; }
+    .tmpl-card-title {
+      font-size: .84rem; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 3px;
+    }
+    .tmpl-card-text {
+      font-size: .72rem; color: var(--text-secondary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    #tmpl-vars-section {
+      padding: 14px 16px 0;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .tmpl-preview {
+      background: #f0f4ff;
+      border-left: 3px solid var(--brand-navy);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      font-size: .82rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .tmpl-preview mark {
+      background: #dbeafe;
+      border-radius: 3px;
+      padding: 1px 4px;
+      color: #1d4ed8;
+      font-weight: 700;
+      font-style: normal;
+    }
+    .tmpl-vars-form { display: flex; flex-direction: column; gap: 10px; padding-bottom: 4px; }
+    .tmpl-var-row   { display: flex; flex-direction: column; gap: 4px; }
+    .tmpl-var-row label {
+      font-size: .68rem; font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .tmpl-var-row input {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-family: inherit;
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .tmpl-var-row input:focus { border-color: var(--brand-navy); }
+    .tmpl-var-row input.input-error { border-color: var(--brand-red) !important; }
+
+    .tmpl-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .tmpl-btn-cancel {
+      background: var(--bg-main); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 18px;
+      font-size: .84rem; cursor: pointer;
+    }
+    .tmpl-btn-send {
+      background: var(--brand-navy); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 8px 20px; font-size: .84rem; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+    }
+    .tmpl-btn-send:hover:not(:disabled) { background: var(--brand-navy-mid); }
+    .tmpl-btn-send:disabled { opacity: .45; cursor: default; }
+
+    /* ══════════════════════════════════════════════════
+       SCROLLBAR
+    ══════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ══════════════════════════════════════════════════
+       TOGGLE SWITCH (data limite)
+    ══════════════════════════════════════════════════ */
+    .toggle-label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0; width: 0; height: 0; position: absolute;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 17px;
+      transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 13px; height: 13px;
+      left: 2px; top: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--brand-navy); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(15px); }
+
+    /* ══════════════════════════════════════════════════
+       PDF MODAL (iframe fullscreen)
+    ══════════════════════════════════════════════════ */
+    #pdf-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 750;
+      background: rgba(0,0,0,.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    #pdf-modal.hidden { display: none; }
+    .pdf-modal-hdr {
+      width: 90vw;
+      max-width: 960px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .pdf-modal-hdr button {
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      padding: 7px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .84rem;
+      transition: background .15s;
+    }
+    .pdf-modal-hdr button:hover { background: rgba(255,255,255,.28); }
+    #pdf-iframe {
+      width: 90vw;
+      max-width: 960px;
+      height: 85vh;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    /* ══════════════════════════════════════════════════
+       GERENCIADOR DE CATEGORIAS
+    ══════════════════════════════════════════════════ */
+    #cat-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 650;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #cat-modal.hidden { display: none; }
+    .cat-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 82vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.28);
+      overflow: hidden;
+    }
+    .cat-box h3 { font-size: .95rem; font-weight: 700; }
+    .cat-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-height: 60px;
+    }
+    .cat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--bg-main);
+      font-size: .82rem;
+    }
+    .cat-item-name { flex: 1; }
+    .cat-item-tag {
+      font-size: .64rem;
+      color: var(--text-muted);
+      background: var(--border);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .btn-cat-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--brand-red);
+      padding: 3px 6px;
+      border-radius: 5px;
+      line-height: 1;
+    }
+    .btn-cat-del:hover { background: #fee2e2; }
+    .btn-cat-del:disabled { color: #ccc; cursor: default; }
+    .btn-cat-del:disabled:hover { background: none; }
+    .cat-add-row { display: flex; gap: 8px; }
+    .cat-add-row input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-family: inherit;
+      font-size: .82rem;
+      outline: none;
+    }
+    .cat-add-row input:focus { border-color: var(--brand-navy); }
+    .btn-cat-add {
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-cat-add:hover { background: var(--brand-navy-mid); }
+    .btn-cat-close {
+      align-self: flex-end;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 18px;
+      font-size: .82rem;
+      cursor: pointer;
+    }
+    .btn-cat-mgr {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: .75rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .btn-cat-mgr:hover { background: var(--bg-main); color: var(--text-primary); }
+
+    /* ── Botão Nova conversa ── */
+    .convs-new-btn {
+      margin: 8px 12px 4px;
+      width: calc(100% - 24px);
+      background: var(--brand-navy);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 14px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .convs-new-btn:hover { background: var(--brand-navy-mid); }
+
+    /* ══════════════════════════════════════════════════
+       MODAL — NOVA CONVERSA
+    ══════════════════════════════════════════════════ */
+    #new-convo-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 700;
+      background: rgba(0,0,0,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(1px);
+    }
+    #new-convo-modal.hidden { display: none; }
+
+    .ncm-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.28);
+    }
+    .ncm-hdr {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .ncm-hdr-info  { flex: 1; min-width: 0; }
+    .ncm-hdr-title { font-size: .95rem; font-weight: 800; }
+    .ncm-hdr-sub   { font-size: .71rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .ncm-close     {
+      background: none; border: none; font-size: 1rem;
+      cursor: pointer; color: var(--text-muted);
+      padding: 3px 7px; border-radius: 5px; flex-shrink: 0;
+    }
+    .ncm-close:hover { background: var(--bg-main); }
+
+    .ncm-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .ncm-section-title {
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    /* Linha de contato */
+    .ncm-contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+    }
+    .ncm-contact-grid .full { grid-column: 1 / -1; }
+    .ncm-field { display: flex; flex-direction: column; gap: 4px; }
+    .ncm-field label {
+      font-size: .68rem; font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .ncm-field input, .ncm-field select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-family: inherit;
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .ncm-field input:focus, .ncm-field select:focus { border-color: var(--brand-navy); }
+    .ncm-field input.input-error { border-color: var(--brand-red) !important; }
+    .ncm-phone-hint {
+      font-size: .65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Template options reutilizam .tmpl-card */
+
+    /* Vars section reutiliza #tmpl-vars-section e tmpl-vars-form */
+    #ncm-vars-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .ncm-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .ncm-btn-cancel {
+      background: var(--bg-main); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 18px;
+      font-size: .84rem; cursor: pointer;
+    }
+    .ncm-btn-send {
+      background: var(--brand-navy); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 8px 20px; font-size: .84rem; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+    }
+    .ncm-btn-send:hover:not(:disabled) { background: var(--brand-navy-mid); }
+    .ncm-btn-send:disabled { opacity: .45; cursor: default; }
+
+    /* ══════════════════════════════════════════════════
+       CONVERSAS — filtro pills
+    ══════════════════════════════════════════════════ */
+    .convs-filter {
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 5px;
+    }
+    .filter-pill {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 9px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--bg-main);
+      color: var(--text-secondary);
+      transition: background .2s, color .2s, border-color .2s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .filter-pill.active-all { background: #1a237e; color: #fff; border-color: #1a237e; }
+    .filter-pill.active-pf  { background: #1565c0; color: #fff; border-color: #1565c0; }
+    .filter-pill.active-pj  { background: #c62828; color: #fff; border-color: #c62828; }
+    .filter-pill-count { font-size: .62rem; opacity: .82; }
+
+    /* ══════════════════════════════════════════════════
+       CONVERSAS — indicadores e menu contextual
+    ══════════════════════════════════════════════════ */
+
+    /* Badge de pin sobreposto ao avatar */
+    .conv-pin-indicator {
+      position: absolute;
+      bottom: -2px; right: -3px;
+      font-size: .55rem;
+      background: #fff;
+      border-radius: 50%;
+      width: 15px; height: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1.5px var(--border);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* Bolinha azul de não lida — direita do card */
+    .conv-unread-dot {
+      width: 11px; height: 11px; min-width: 11px;
+      border-radius: 50%;
+      background: #1565c0;
+      flex-shrink: 0;
+      align-self: center;
+      box-shadow: 0 0 0 3px rgba(21,101,192,.14);
+    }
+
+    /* Botão ⋮ — aparece no hover/active do card */
+    .conv-menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 4px 6px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      align-self: center;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity .15s, background .12s;
+    }
+    .conv-item:hover .conv-menu-btn,
+    .conv-item.active .conv-menu-btn { opacity: 1; }
+    .conv-menu-btn:hover { background: rgba(0,0,0,.08); color: var(--text-primary); }
+
+    /* Badge de arquivada */
+    .conv-archive-badge {
+      font-size: .52rem; color: #888; background: #efefef;
+      border-radius: 4px; padding: 1px 5px; display: inline-block;
+    }
+    /* Conversa arquivada — fundo levemente diferente */
+    .conv-item.archived-conv { opacity: .85; }
+    .conv-item.archived-conv .conv-avatar { background: #8a9ab3; }
+
+    /* Divisor de fixadas */
+    .pinned-divider {
+      font-size: .62rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 8px 14px 3px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* Destaque de não lida */
+    .conv-item.unread-item { background: #e8eaf6; }
+    .conv-item.unread-item .conv-name { font-weight: 800; }
+    .conv-item.unread-item:hover { background: #dde0f0; }
+
+    /* Badge na aba Conversas */
+    .convs-tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--brand-red);
+      color: #fff;
+      font-size: .6rem;
+      font-weight: 700;
+      min-width: 15px; height: 15px;
+      padding: 0 3px;
+      border-radius: 8px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* ── Menu contextual flutuante ── */
+    #conv-ctx-menu {
+      position: fixed;
+      z-index: 800;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.16);
+      min-width: 192px;
+      overflow: hidden;
+      padding: 4px 0;
+    }
+    #conv-ctx-menu.hidden { display: none; }
+    .conv-ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 15px;
+      font-size: .82rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: background .12s;
+      white-space: nowrap;
+    }
+    .conv-ctx-item:hover { background: #f0f2f7; }
+    .conv-ctx-item.ctx-disabled {
+      color: var(--text-muted);
+      cursor: default;
+    }
+    .conv-ctx-item.ctx-disabled:hover { background: none; }
+    .conv-ctx-divider { height: 1px; background: var(--border); margin: 3px 0; }
+    .ctx-soon {
+      font-size: .6rem;
+      color: var(--text-muted);
+      background: var(--border);
+      padding: 1px 5px;
+      border-radius: 8px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header class="top-header">
+  <div class="brand">
+    <span class="brand-name">SARTEC</span>
+    <span class="brand-sub">Papelaria · Painel</span>
+  </div>
+  <div class="header-divider"></div>
+  <div class="waiting-counter">
+    <div class="waiting-dot" id="waiting-dot" style="display:none"></div>
+    <span id="waiting-count">Carregando...</span>
+  </div>
+  <div class="refresh-info">Atualiza em <span id="countdown">30</span>s</div>
+  <button class="btn-logout" onclick="logout()">Sair</button>
+</header>
+
+<!-- ══════ TAB BAR ══════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-pf"    onclick="switchTab('pf')">
+    Pessoa Física <span class="tab-badge" id="badge-pf"></span>
+  </button>
+  <button class="tab-btn"        id="tab-pj"    onclick="switchTab('pj')">
+    Pessoa Jurídica <span class="tab-badge" id="badge-pj"></span>
+  </button>
+  <button class="tab-btn"        id="tab-convs" onclick="switchTab('convs')">
+    Conversas
+  </button>
+</div>
+
+<!-- ══════ VIEW PF ══════ -->
+<div class="view active" id="view-pf">
+  <div class="pipeline-wrap">
+    <div class="pipeline" id="pipeline-pf"></div>
+  </div>
+</div>
+
+<!-- ══════ VIEW PJ ══════ -->
+<div class="view" id="view-pj">
+  <div class="pipeline-wrap">
+    <div class="pipeline" id="pipeline-pj"></div>
+  </div>
+</div>
+
+<!-- ══════ VIEW CONVERSAS ══════ -->
+<div class="view" id="view-convs">
+  <div class="convs-sidebar">
+    <div class="convs-search">
+      <input type="search" id="convs-search-input" placeholder="🔍  Buscar por nome ou número..." oninput="filterConvsList()">
+    </div>
+    <button class="convs-new-btn" onclick="openNewConvoModal()">✏️ Nova conversa</button>
+    <div class="convs-filter">
+      <button class="filter-pill active-all" id="pill-all" onclick="setConvFilter('all')">
+        Todas <span class="filter-pill-count" id="pill-count-all">0</span>
+      </button>
+      <button class="filter-pill" id="pill-pf" onclick="setConvFilter('pf')">
+        PF <span class="filter-pill-count" id="pill-count-pf">0</span>
+      </button>
+      <button class="filter-pill" id="pill-pj" onclick="setConvFilter('pj')">
+        PJ <span class="filter-pill-count" id="pill-count-pj">0</span>
+      </button>
+    </div>
+    <div class="convs-list" id="convs-list"></div>
+  </div>
+  <div class="convs-main" id="convs-main">
+    <div class="convs-empty" id="convs-empty">
+      <div class="convs-empty-icon">💬</div>
+      <div class="convs-empty-text">Selecione uma conversa</div>
+    </div>
+    <!-- Chat da aba Conversas é preenchido dinamicamente -->
+  </div>
+</div>
+
+<!-- ══════ CHAT MODAL (pipeline "Abrir") ══════ -->
+<div class="modal-overlay hidden" id="chat-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <button class="modal-hdr-btn" onclick="closeModal()">✕</button>
+      <div class="info">
+        <h2 id="modal-chat-name">—</h2>
+        <div class="info-sub">
+          <span id="modal-chat-badge"></span>
+          <span id="modal-pipeline-status" style="opacity:.8"></span>
+        </div>
+      </div>
+      <button class="modal-hdr-btn btn-resolve-modal" onclick="resolveConversation('modal')">Resolver</button>
+    </div>
+
+    <!-- Barra de janela de 24h -->
+    <div class="window-status-bar ws-unknown" id="modal-window-bar"></div>
+
+    <details class="dados-pedido" id="modal-dados-section">
+      <summary>Dados do pedido</summary>
+      <div class="dados-form">
+        <div class="form-row" id="modal-dataLimite-wrap">
+          <label class="toggle-label-row">
+            <label class="toggle-switch">
+              <input type="checkbox" id="modal-dataLimite-toggle" onchange="onToggleDataLimite('modal')">
+              <span class="toggle-slider"></span>
+            </label>
+            Data limite
+          </label>
+          <div id="modal-dataLimite-row" style="display:none;margin-top:4px">
+            <input type="date" id="modal-dataLimite">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Forma de entrega</label>
+          <select id="modal-formaEntrega" onchange="toggleEndereco('modal')">
+            <option value="">—</option>
+            <option value="retirada">Retirada na loja</option>
+            <option value="entrega">Entrega em domicílio</option>
+          </select>
+        </div>
+        <div class="form-row full" id="modal-row-endereco" style="display:none">
+          <label>Endereço de entrega</label>
+          <input type="text" id="modal-endereco" placeholder="Rua, número, bairro">
+        </div>
+        <div class="form-row full">
+          <label>Observações internas</label>
+          <textarea id="modal-observacoes" placeholder="Não aparece para o cliente"></textarea>
+        </div>
+        <div id="modal-campos-lista" style="display:contents">
+          <div class="form-row">
+            <label>Escola</label>
+            <input type="text" id="modal-escola" placeholder="Nome da escola">
+          </div>
+          <div class="form-row">
+            <label>Série</label>
+            <input type="text" id="modal-serie" placeholder="Ex: 3º ano">
+          </div>
+        </div>
+        <div class="dados-save-row">
+          <button class="btn-save" id="modal-btn-save" onclick="saveCardData('modal')">Salvar dados</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="messages" id="modal-messages"></div>
+
+    <div class="composer">
+      <!-- Lock da janela de 24h — aparece quando janela está fechada/aguardando -->
+      <div class="composer-lock-bar" id="modal-composer-lock" style="display:none"></div>
+      <div class="img-preview-bar" id="modal-img-preview-bar">
+        <img id="modal-img-thumb" src="" alt="preview">
+        <input class="caption-input" id="modal-img-caption" placeholder="Legenda (opcional)">
+        <button class="btn-clear-img" onclick="clearImage('modal')" title="Remover">✕</button>
+      </div>
+      <div class="composer-row">
+        <button class="btn-attach" onclick="document.getElementById('modal-file-input').click()" title="Imagem">📎</button>
+        <input type="file" id="modal-file-input" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" style="display:none" onchange="handleImageSelect(event,'modal')">
+        <textarea id="modal-msg-input" placeholder="Digite sua mensagem..." rows="1"
+          onkeydown="handleEnter(event,'modal')" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="modal-send-btn" onclick="sendMessage('modal')">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ CONVS CHAT AREA (inside convs-main) ══════ -->
+<!-- Injected dynamically -->
+
+<!-- ══════ PDF MODAL ══════ -->
+<div id="pdf-modal" class="hidden">
+  <div class="pdf-modal-hdr">
+    <button onclick="downloadPdfModal()">⬇ Baixar</button>
+    <button onclick="closePdfModal()">✕ Fechar</button>
+  </div>
+  <iframe id="pdf-iframe" title="PDF"></iframe>
+</div>
+
+<!-- ══════ GERENCIADOR DE CATEGORIAS ══════ -->
+<div id="cat-modal" class="hidden">
+  <div class="cat-box">
+    <h3>⚙️ Gerenciar Categorias</h3>
+    <div class="cat-list" id="cat-list"></div>
+    <div class="cat-add-row">
+      <input type="text" id="cat-new-input" placeholder="Nova categoria..." maxlength="40"
+        onkeydown="if(event.key==='Enter')addCat()">
+      <button class="btn-cat-add" onclick="addCat()">Adicionar</button>
+    </div>
+    <button class="btn-cat-close" onclick="closeCatManager()">Fechar</button>
+  </div>
+</div>
+
+<!-- ══════ MEDIA MODAL ══════ -->
+<div id="media-modal" class="hidden">
+  <img id="media-modal-img" src="" alt="imagem">
+  <div class="media-modal-btns">
+    <button onclick="closeMediaModal()">Fechar</button>
+    <button onclick="downloadMediaModal()">Baixar</button>
+  </div>
+</div>
+
+<!-- ══════ MODAL — NOVA CONVERSA ══════ -->
+<div id="new-convo-modal" class="hidden">
+  <div class="ncm-box">
+    <div class="ncm-hdr">
+      <div class="ncm-hdr-info">
+        <div class="ncm-hdr-title">✏️ Nova conversa</div>
+        <div class="ncm-hdr-sub">
+          Pela regra do WhatsApp, a primeira mensagem precisa ser um template aprovado.
+          O cliente responderá e a janela de 24h abrirá automaticamente.
+        </div>
+      </div>
+      <button class="ncm-close" onclick="closeNewConvoModal()" title="Fechar">✕</button>
+    </div>
+
+    <div class="ncm-body">
+      <!-- 1. Dados do contato -->
+      <div>
+        <div class="ncm-section-title">📋 Contato</div>
+        <div class="ncm-contact-grid">
+          <div class="ncm-field full">
+            <label>Telefone com DDI + DDD</label>
+            <input type="tel" id="ncm-phone"
+              placeholder="Ex: 5512999990000"
+              oninput="onNcmPhoneInput()"
+              maxlength="15">
+            <span class="ncm-phone-hint">DDI 55 (Brasil) + DDD + número. Ex: 5512999990000</span>
+          </div>
+          <div class="ncm-field">
+            <label>Nome do cliente</label>
+            <input type="text" id="ncm-name"
+              placeholder="Ex: João Silva"
+              oninput="onNcmNameInput()">
+          </div>
+          <div class="ncm-field">
+            <label>Tipo</label>
+            <select id="ncm-client-type">
+              <option value="pf">PF — Pessoa Física</option>
+              <option value="pj">PJ — Pessoa Jurídica</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Escolha do template -->
+      <div>
+        <div class="ncm-section-title">📨 Template</div>
+        <div style="display:flex;flex-direction:column;gap:7px" id="ncm-tmpl-options">
+          <div class="tmpl-card" data-ncm-type="attendance_resume" onclick="selectNcmTemplate('attendance_resume')">
+            <div class="tmpl-card-title">↩ Retomar atendimento</div>
+            <div class="tmpl-card-text">"Olá, [nome]. Recebemos sua solicitação sobre [assunto] e queremos continuar seu atendimento."</div>
+          </div>
+          <div class="tmpl-card" data-ncm-type="budget_update" onclick="selectNcmTemplate('budget_update')">
+            <div class="tmpl-card-title">📋 Orçamento</div>
+            <div class="tmpl-card-text">"Olá, [nome]. Temos uma atualização sobre seu orçamento de [item]. Pode responder para continuarmos?"</div>
+          </div>
+          <div class="tmpl-card" data-ncm-type="pj_prospecting" onclick="selectNcmTemplate('pj_prospecting')">
+            <div class="tmpl-card-title">🏢 Prospecção PJ</div>
+            <div class="tmpl-card-text">"Olá, [nome]. Atendemos empresas com materiais de escritório e reposição recorrente."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Variáveis do template (aparece após escolha) -->
+      <div id="ncm-vars-section" style="display:none">
+        <div class="ncm-section-title">✏️ Variáveis</div>
+        <div class="tmpl-preview" id="ncm-preview"></div>
+        <div class="tmpl-vars-form" id="ncm-vars-form"></div>
+      </div>
+    </div>
+
+    <div class="ncm-footer">
+      <button class="ncm-btn-cancel" onclick="closeNewConvoModal()">Cancelar</button>
+      <button class="ncm-btn-send" id="btn-ncm-submit" onclick="submitNewConvo()" disabled>
+        Iniciar conversa →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL DE TEMPLATE WHATSAPP ══════ -->
+<div id="template-modal" class="hidden">
+  <div class="tmpl-box">
+    <div class="tmpl-hdr">
+      <div class="tmpl-hdr-info">
+        <div class="tmpl-hdr-title">📨 Enviar Template WhatsApp</div>
+        <div class="tmpl-hdr-sub">Escolha o template, preencha as variáveis e envie. O cliente precisará responder para reabrir a janela de 24h.</div>
+      </div>
+      <button class="tmpl-close" onclick="closeTemplateModal()" title="Fechar">✕</button>
+    </div>
+
+    <div class="tmpl-options">
+      <div class="tmpl-card" data-type="attendance_resume" onclick="selectTemplateType('attendance_resume')">
+        <div class="tmpl-card-title">↩ Retomar atendimento</div>
+        <div class="tmpl-card-text">"Olá, [nome]. Recebemos sua solicitação sobre [assunto] e queremos continuar seu atendimento."</div>
+      </div>
+      <div class="tmpl-card" data-type="budget_update" onclick="selectTemplateType('budget_update')">
+        <div class="tmpl-card-title">📋 Orçamento</div>
+        <div class="tmpl-card-text">"Olá, [nome]. Temos uma atualização sobre seu orçamento de [item]. Pode responder para continuarmos?"</div>
+      </div>
+      <div class="tmpl-card" data-type="pj_prospecting" onclick="selectTemplateType('pj_prospecting')">
+        <div class="tmpl-card-title">🏢 Prospecção PJ</div>
+        <div class="tmpl-card-text">"Olá, [nome]. Atendemos empresas com materiais de escritório e reposição recorrente."</div>
+      </div>
+    </div>
+
+    <div id="tmpl-vars-section" style="display:none">
+      <!-- Preview do template preenchido (atualiza em tempo real) -->
+      <div class="tmpl-preview" id="tmpl-preview"></div>
+      <!-- Campos de variáveis -->
+      <div class="tmpl-vars-form" id="tmpl-vars-form"></div>
+    </div>
+
+    <div class="tmpl-footer">
+      <button class="tmpl-btn-cancel" onclick="closeTemplateModal()">Cancelar</button>
+      <button class="tmpl-btn-send" id="btn-tmpl-submit" onclick="submitTemplate()" disabled>
+        Enviar template →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MENU CONTEXTUAL DE CONVERSA ══════ -->
+<div id="conv-ctx-menu" class="hidden" role="menu">
+  <button class="conv-ctx-item" id="ctx-btn-pin"    onclick="ctxPin()">📌 Fixar no topo</button>
+  <button class="conv-ctx-item" id="ctx-btn-unread" onclick="ctxUnread()">🔵 Marcar como não lida</button>
+  <div class="conv-ctx-divider"></div>
+  <button class="conv-ctx-item ctx-disabled" onclick="ctxFavorite()">
+    ⭐ Favoritar <span class="ctx-soon">em breve</span>
+  </button>
+  <button class="conv-ctx-item ctx-disabled" onclick="ctxArchive()">
+    📦 Arquivar <span class="ctx-soon">em breve</span>
+  </button>
+</div>
+
+<!-- ══════ CONFIRM MODAL ══════ -->
+<div id="confirm-modal" class="hidden">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirmar ação</h3>
+    <p  id="confirm-text">Tem certeza?</p>
+    <div class="confirm-btns">
+      <button class="btn-confirm-cancel" onclick="confirmResolve(false)">Cancelar</button>
+      <button class="btn-confirm-ok"     onclick="confirmResolve(true)">Resolver</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  AUTENTICAÇÃO                                                ║
+// ╚══════════════════════════════════════════════════════════════╝
+if (sessionStorage.getItem("sartec_auth") !== "true") {
+  location.replace("login.html");
+}
+
+function logout() {
+  sessionStorage.removeItem("sartec_auth");
+  location.replace("login.html");
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CONSTANTES                                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+const PF_COLS = [
+  { key: "novo",              label: "NOVO",             color: "var(--status-novo)" },
+  { key: "em_atendimento",    label: "EM ATENDIMENTO",   color: "var(--status-atend)" },
+  { key: "orcamento_enviado", label: "ORÇAMENTO ENVIADO",color: "var(--status-orc)" },
+  { key: "confirmado",        label: "CONFIRMADO",       color: "var(--status-confirm)" },
+  { key: "finalizado",        label: "FINALIZADO",       color: "var(--status-final)" },
+  { key: "resolvido",         label: "RESOLVIDOS",       color: "var(--status-resolvido)", resolved: true },
+];
+
+const PJ_COLS = [
+  { key: "novo",              label: "NOVO",             color: "var(--status-novo)" },
+  { key: "cadastro",          label: "CADASTRO",         color: "var(--status-atend)" },
+  { key: "em_cotacao",        label: "EM COTAÇÃO",       color: "var(--status-orc)" },
+  { key: "proposta_enviada",  label: "PROPOSTA ENVIADA", color: "var(--status-confirm)" },
+  { key: "confirmado",        label: "CONFIRMADO",       color: "var(--status-confirm)" },
+  { key: "entregue",          label: "ENTREGUE",         color: "var(--status-final)" },
+  { key: "resolvido",         label: "RESOLVIDOS",       color: "var(--status-resolvido)", resolved: true },
+];
+
+const DEFAULT_CATEGORIES = {
+  lista:      "Lista Escolar",
+  cotacao_pj: "Cotação PJ",
+  xerox:      "Xerox/Impressão",
+  produto:    "Produtos",
+  duvida:     "Dúvida",
+  outro:      "Outro",
+};
+
+function getCategories() {
+  try {
+    const saved = localStorage.getItem("sartec_categories");
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return { ...DEFAULT_CATEGORIES };
+}
+
+function saveCategories(cats) {
+  localStorage.setItem("sartec_categories", JSON.stringify(cats));
+}
+
+const STATUS_LABEL_PF = {
+  novo:"NOVO", em_atendimento:"EM ATENDIMENTO", orcamento_enviado:"ORÇAMENTO ENVIADO",
+  confirmado:"CONFIRMADO", finalizado:"FINALIZADO", resolvido:"RESOLVIDO",
+};
+const STATUS_LABEL_PJ = {
+  novo:"NOVO", cadastro:"CADASTRO", em_cotacao:"EM COTAÇÃO", proposta_enviada:"PROPOSTA ENVIADA",
+  confirmado:"CONFIRMADO", entregue:"ENTREGUE", resolvido:"RESOLVIDO",
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ESTADO — apenas sessionStorage para UI efêmero             ║
+// ╚══════════════════════════════════════════════════════════════╝
+let allConvs        = [];
+let currentTab      = sessionStorage.getItem("activeTab") || "pf";
+let openModalPhone  = null;   // conversa aberta no modal do pipeline
+let openConvsPhone    = null;   // conversa aberta na aba Conversas
+let openConvsRedisKey = null;   // chave Redis da conversa aberta (para buscar archives corretamente)
+let pendingMedia    = {};     // { modal: {type,base64,mimeType,filename}, convs: {...} }
+let countdownVal    = 30;
+let countdownTimer  = null;
+let convsPollTimer  = null;
+let resolveCallback = null;   // callback para o confirm modal
+
+// mídia modal
+let mediaModalBase64 = null;
+let mediaModalMime   = null;
+
+// tracking para notificação de novos cards
+let knownPhones = new Set();
+let audioCtx    = null;
+
+// aba Conversas — filtro, pin, não lida, menu contextual
+let convFilter   = sessionStorage.getItem("sartec_conv_filter") || "all";
+let pinnedConvs  = [];
+let unreadConvs  = [];
+let convCtxPhone = null;   // phone do card com menu aberto
+try { pinnedConvs = JSON.parse(localStorage.getItem("sartec_pinned_convs") || "[]"); } catch {}
+try { unreadConvs = JSON.parse(localStorage.getItem("sartec_unread_convs") || "[]"); } catch {}
+
+// store de mídia (PDF, planilhas) — evita base64 gigante em atributos HTML
+const mediaStore  = {};
+let   mediaStoreIdx = 0;
+
+// PDF modal
+let pdfBlobUrl = null;
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  HELPERS                                                     ║
+// ╚══════════════════════════════════════════════════════════════╝
+const esc = (s) =>
+  String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+function demandClass(t) {
+  return { lista:"dt-lista", cotacao_pj:"dt-cotacao_pj", xerox:"dt-xerox",
+           produto:"dt-produto", duvida:"dt-duvida" }[t] || "dt-outro";
+}
+function demandLabel(t) {
+  const cats = getCategories();
+  return cats[t] || t || "Outro";
+}
+
+function relTime(iso) {
+  if (!iso) return "—";
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 1)  return "agora";
+  if (m < 60) return `há ${m}min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `há ${h}h`;
+  return `há ${Math.floor(h/24)}d`;
+}
+
+function isUrgent(iso) {
+  return iso && (Date.now() - new Date(iso)) > 10 * 60 * 1000;
+}
+
+function initials(name) {
+  if (!name || name === "—") return "?";
+  const parts = name.trim().split(" ");
+  return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+}
+
+function pipelineLabel(key, type) {
+  return (type === "pj" ? STATUS_LABEL_PJ : STATUS_LABEL_PF)[key] || key;
+}
+
+function base64ToBlobUrl(base64, mimeType) {
+  try {
+    const byteStr = atob(base64);
+    const ab = new ArrayBuffer(byteStr.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+    return URL.createObjectURL(new Blob([ab], { type: mimeType }));
+  } catch { return null; }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  SOUND & NOTIFICATION BADGE                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+function playNotificationSound() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.3);
+  } catch (e) { /* sem suporte a áudio */ }
+}
+
+function updateDocTitle(convs) {
+  const novos = convs.filter(c =>
+    c.pipelineStatus === "novo" && c.status === "aguardando_humano"
+  ).length;
+  document.title = novos > 0 ? `(${novos}) Sartec Papelaria` : "Sartec Papelaria — Painel";
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  TABS                                                        ║
+// ╚══════════════════════════════════════════════════════════════╝
+function switchTab(tab) {
+  currentTab = tab;
+  sessionStorage.setItem("activeTab", tab);
+
+  ["pf","pj","convs"].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle("active", t === tab);
+    document.getElementById(`view-${t}`).classList.toggle("active", t === tab);
+  });
+
+  if (tab === "convs") {
+    applyPillActiveState();
+    updateConvsTabBadge();
+    loadConversations();
+    startConvsPoll();
+  } else {
+    stopConvsPoll();
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  QUEUE / PIPELINE                                            ║
+// ╚══════════════════════════════════════════════════════════════╝
+async function loadQueue() {
+  try {
+    const res  = await fetch("/api/queue");
+    const data = await res.json();
+    allConvs   = data.conversations || [];
+    renderPipeline(allConvs);
+    updateHeader(allConvs);
+    updateDocTitle(allConvs);
+    detectNewCards(allConvs);
+  } catch (e) { console.error("[loadQueue]", e); }
+}
+
+function updateHeader(convs) {
+  const waiting = convs.filter(c => c.status === "aguardando_humano").length;
+  document.getElementById("waiting-count").textContent =
+    waiting === 0 ? "Nenhuma aguardando" :
+    waiting === 1 ? "1 aguardando atendimento" :
+    `${waiting} aguardando atendimento`;
+  document.getElementById("waiting-dot").style.display = waiting > 0 ? "block" : "none";
+
+  // Badges nas abas
+  const pfWaiting = convs.filter(c => (c.clientType||"pf") === "pf" && c.status === "aguardando_humano" && c.pipelineStatus === "novo").length;
+  const pjWaiting = convs.filter(c => c.clientType === "pj" && c.status === "aguardando_humano" && c.pipelineStatus === "novo").length;
+  document.getElementById("badge-pf").textContent = pfWaiting || "";
+  document.getElementById("badge-pj").textContent = pjWaiting || "";
+}
+
+function detectNewCards(convs) {
+  const newPhones = new Set(convs.map(c => c.phone));
+  let hasNew = false;
+  for (const p of newPhones) {
+    if (!knownPhones.has(p)) { hasNew = true; break; }
+  }
+  if (hasNew && knownPhones.size > 0) playNotificationSound();
+  knownPhones = newPhones;
+}
+
+function renderPipeline(convs) {
+  renderPipelineTab("pf", PF_COLS, convs.filter(c => (c.clientType||"pf") === "pf"));
+  renderPipelineTab("pj", PJ_COLS, convs.filter(c => c.clientType === "pj"));
+}
+
+function renderPipelineTab(tabId, cols, convs) {
+  const container = document.getElementById(`pipeline-${tabId}`);
+  container.innerHTML = "";
+
+  if (!convs.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-pipeline";
+    empty.innerHTML = "✅ Nenhuma conversa na fila";
+    container.appendChild(empty);
+    return;
+  }
+
+  // Distribui nas colunas
+  const byCol = {};
+  for (const col of cols) byCol[col.key] = [];
+
+  for (const c of convs) {
+    if (c.status === "resolvido") {
+      byCol["resolvido"].push(c);
+    } else if (c.status === "triagem_incompleta") {
+      byCol["novo"].push(c);
+    } else {
+      const key = c.pipelineStatus || "novo";
+      if (byCol[key]) byCol[key].push(c);
+      else byCol["novo"].push(c);
+    }
+  }
+
+  for (const col of cols) {
+    const cards = byCol[col.key] || [];
+    const hasUrgent = !col.resolved && cards.some(c =>
+      c.status === "aguardando_humano" && isUrgent(c.handoffAt)
+    );
+
+    const colEl = document.createElement("div");
+    colEl.className = "pipe-col" + (col.resolved ? " col-resolvido" : "");
+
+    // Header
+    const hdr = document.createElement("div");
+    hdr.className = "pipe-col-header";
+    const countEl = document.createElement("span");
+    countEl.className = "pipe-col-count" + (hasUrgent ? " has-urgent" : "");
+    countEl.textContent = cards.length;
+    hdr.innerHTML = `<span class="pipe-col-dot" style="background:${col.color}"></span><span class="pipe-col-label">${esc(col.label)}</span>`;
+    hdr.appendChild(countEl);
+    colEl.appendChild(hdr);
+
+    const cardsEl = document.createElement("div");
+    cardsEl.className = "pipe-col-cards";
+
+    if (!cards.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-col";
+      empty.textContent = "—";
+      cardsEl.appendChild(empty);
+    } else {
+      for (const c of cards) {
+        cardsEl.appendChild(buildCard(c, col, cols));
+      }
+    }
+
+    colEl.appendChild(cardsEl);
+    container.appendChild(colEl);
+  }
+}
+
+function buildCard(c, col, cols) {
+  const isResolved   = c.status === "resolvido";
+  const isIncomplete = c.status === "triagem_incompleta";
+  const urgent       = !isResolved && !isIncomplete && c.pipelineStatus === "novo" && isUrgent(c.handoffAt);
+  const clientType   = c.clientType || "pf";
+
+  const card = document.createElement("div");
+  let cls = "card";
+  if (urgent) cls += " urgent";
+  if (isResolved) cls += " resolvido";
+  if (isIncomplete) cls += " triagem_incompleta";
+  card.className = cls;
+
+  const colsForStatus = cols.filter(col => !col.resolved);
+  const statusOptions = colsForStatus.map(col =>
+    `<option value="${col.key}"${col.key === (c.pipelineStatus||"novo") ? " selected" : ""}>${col.label}</option>`
+  ).join("");
+
+  const cardTitle = c.cardTitle || "";
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="type-badge ${clientType}" title="${clientType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"}">${clientType.toUpperCase()}</span>
+      <span class="card-name" contenteditable="true" data-phone="${esc(c.phone)}"
+        onblur="saveCardField(this,'clientName')"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+        title="Clique para editar o nome">${esc(c.clientName)}</span>
+      ${urgent
+        ? `<span class="card-time urgent">⚠️ ${relTime(c.handoffAt)}</span>`
+        : `<span class="card-time">${relTime(c.handoffAt)}</span>`}
+    </div>
+
+    <div class="card-title" contenteditable="true" data-phone="${esc(c.phone)}"
+      onblur="saveCardField(this,'cardTitle')"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      title="Clique para editar o resumo do pedido">${esc(cardTitle)}</div>
+
+    <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:2px">
+      <select class="demand-select ${demandClass(c.demandType)}"
+        data-phone="${esc(c.phone)}"
+        onchange="saveDemandType(this)" onclick="event.stopPropagation()" title="Tipo de demanda">
+        ${Object.entries(getCategories()).map(([k,v]) =>
+          `<option value="${k}"${k===c.demandType?" selected":""}>${v}</option>`
+        ).join("")}
+      </select>
+      <button class="btn-cat-mgr" onclick="event.stopPropagation();openCatManager()" title="Gerenciar categorias">⚙️</button>
+      ${isIncomplete ? `<span class="tag-sem-resp">Sem resposta</span>` : ""}
+    </div>
+
+    <div class="card-actions" onclick="event.stopPropagation()">
+      ${isResolved
+        ? `<div class="card-actions-row">
+             <button class="btn-reopen" onclick="reopenCard('${esc(c.phone)}','${clientType}')">↺ Reabrir</button>
+             <button class="btn-open" style="flex:1" onclick="openChat('${esc(c.phone)}')">Abrir →</button>
+           </div>`
+        : `<div class="card-actions-row">
+             <select class="status-select"
+               onchange="changeStatus(this,'${esc(c.phone)}','${clientType}')"
+               title="Coluna do pipeline">
+               ${statusOptions}
+             </select>
+             <select class="type-select"
+               onchange="changeClientType(this,'${esc(c.phone)}')">
+               <option value="pf"${clientType==="pf"?" selected":""}>PF</option>
+               <option value="pj"${clientType==="pj"?" selected":""}>PJ</option>
+             </select>
+           </div>
+           <button class="btn-open" onclick="openChat('${esc(c.phone)}')">Abrir →</button>`
+      }
+    </div>
+
+    <div class="card-footer">
+      <span>${c.messageCount} msgs</span>
+      ${isResolved && c.resolvedAt ? `<span>Resolvido ${relTime(c.resolvedAt)}</span>` : ""}
+    </div>
+  `;
+
+  return card;
+}
+
+// ── Salvar campo editável inline ──────────────────────────
+async function saveCardField(el, field) {
+  const phone = el.dataset.phone;
+  const value = el.textContent.trim();
+  if (!phone || !value) return;
+
+  try {
+    await fetch("/api/update-card", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, [field]: value }),
+    });
+    // Atualiza allConvs localmente
+    const conv = allConvs.find(c => c.phone === phone);
+    if (conv) conv[field] = value;
+  } catch (e) { console.error("[saveCardField]", e); }
+}
+
+async function saveDemandType(select) {
+  const phone      = select.dataset.phone;
+  const demandType = select.value;
+  try {
+    await fetch("/api/update-card", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, demandType }),
+    });
+    const conv = allConvs.find(c => c.phone === phone);
+    if (conv) { conv.demandType = demandType; renderPipeline(allConvs); }
+  } catch (e) { console.error("[saveDemandType]", e); }
+}
+
+async function changeStatus(select, phone, clientType) {
+  const newStatus = select.value;
+  const conv = allConvs.find(c => c.phone === phone);
+  if (conv) { conv.pipelineStatus = newStatus; renderPipeline(allConvs); }
+
+  try {
+    await fetch("/api/update-status", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, pipelineStatus: newStatus, clientType }),
+    });
+  } catch (e) { console.error("[changeStatus]", e); }
+}
+
+async function changeClientType(select, phone) {
+  const newType  = select.value;
+  const conv = allConvs.find(c => c.phone === phone);
+  if (conv) {
+    conv.clientType     = newType;
+    conv.pipelineStatus = "novo"; // reset to novo quando troca de aba
+    renderPipeline(allConvs);
+  }
+  try {
+    await fetch("/api/update-card", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, clientType: newType }),
+    });
+  } catch (e) { console.error("[changeClientType]", e); }
+}
+
+async function reopenCard(phone, clientType) {
+  try {
+    const res = await fetch("/api/update-status", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, pipelineStatus: "em_atendimento", clientType }),
+    });
+    if (res.ok) {
+      const conv = allConvs.find(c => c.phone === phone);
+      if (conv) {
+        conv.status         = "aguardando_humano";
+        conv.pipelineStatus = "em_atendimento";
+        conv.resolvedAt     = null;
+        renderPipeline(allConvs);
+      }
+    }
+  } catch (e) { console.error("[reopenCard]", e); }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  AUTO-REFRESH (pipeline)                                     ║
+// ╚══════════════════════════════════════════════════════════════╝
+function startAutoRefresh() {
+  countdownVal = 30;
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    const el = document.getElementById("countdown");
+    if (el) el.textContent = countdownVal;
+    if (countdownVal <= 0) { countdownVal = 30; loadQueue(); }
+  }, 1000);
+}
+
+function stopAutoRefresh() { clearInterval(countdownTimer); countdownTimer = null; }
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CHAT MODAL (pipeline "Abrir")                               ║
+// ╚══════════════════════════════════════════════════════════════╝
+async function openChat(phone) {
+  openModalPhone = phone;
+  pendingMedia.modal = null;
+  clearImage("modal");
+
+  document.getElementById("modal-messages").innerHTML = "";
+  document.getElementById("modal-chat-name").textContent = "Carregando...";
+  document.getElementById("chat-modal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  await refreshModal();
+}
+
+async function refreshModal() {
+  if (!openModalPhone) return;
+  try {
+    const res  = await fetch(`/api/conversation?phone=${openModalPhone}`);
+    const data = await res.json();
+    renderModal(data);
+  } catch (e) { console.error("[refreshModal]", e); }
+}
+
+function renderModal(data) {
+  document.getElementById("modal-chat-name").textContent =
+    data.clientName || data.phone || "—";
+
+  document.getElementById("modal-chat-badge").innerHTML =
+    `<span class="demand-tag ${demandClass(data.demandType)}">${demandLabel(data.demandType)}</span>`;
+
+  document.getElementById("modal-pipeline-status").textContent =
+    pipelineLabel(data.pipelineStatus, data.clientType);
+
+  // Janela de 24h
+  updateWindowUI("modal", data);
+
+  populateDadosForm("modal", data);
+
+  const container = document.getElementById("modal-messages");
+
+  // Preserva bolhas otimistas
+  const optimistic = Array.from(container.querySelectorAll(".optimistic"))
+    .map(el => ({ content: el.dataset.content, mediaType: el.dataset.mediaType || null }));
+
+  container.innerHTML = "";
+  for (const msg of data.history || []) appendBubble(container, msg);
+
+  const serverContents = new Set(
+    (data.history || []).filter(m => m.sentByHuman).map(m => m.content)
+  );
+  for (const o of optimistic) {
+    if (!serverContents.has(o.content)) {
+      appendBubble(container, { role:"assistant", content:o.content, sentByHuman:true,
+        mediaType: o.mediaType }, true);
+    }
+  }
+  scrollToBottom(container);
+}
+
+function closeModal() {
+  openModalPhone = null;
+  document.getElementById("chat-modal").classList.add("hidden");
+  document.body.style.overflow = "";
+  clearImage("modal");
+  loadQueue();
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ABA CONVERSAS                                               ║
+// ╚══════════════════════════════════════════════════════════════╝
+let allConversationsList = [];
+
+async function loadConversations() {
+  try {
+    const search = document.getElementById("convs-search-input")?.value || "";
+    const url    = `/api/conversations?page=1&limit=50${search ? `&search=${encodeURIComponent(search)}` : ""}`;
+    const res    = await fetch(url);
+    const data   = await res.json();
+    allConversationsList = data.conversations || [];
+    renderConvsList(allConversationsList);
+  } catch (e) { console.error("[loadConversations]", e); }
+}
+
+function filterConvsList() {
+  loadConversations();
+}
+
+function renderConvsList(convs) {
+  const list = document.getElementById("convs-list");
+  list.innerHTML = "";
+
+  // Atualiza contadores das pills
+  const cntAll = convs.length;
+  const cntPF  = convs.filter(c => (c.clientType||"pf") === "pf").length;
+  const cntPJ  = convs.filter(c => c.clientType === "pj").length;
+  const elAll  = document.getElementById("pill-count-all");
+  const elPF   = document.getElementById("pill-count-pf");
+  const elPJ   = document.getElementById("pill-count-pj");
+  if (elAll) elAll.textContent = cntAll;
+  if (elPF)  elPF.textContent  = cntPF;
+  if (elPJ)  elPJ.textContent  = cntPJ;
+
+  // Aplica filtro PF/PJ
+  let filtered = convs;
+  if (convFilter === "pf") filtered = convs.filter(c => (c.clientType||"pf") === "pf");
+  else if (convFilter === "pj") filtered = convs.filter(c => c.clientType === "pj");
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:.82rem">Nenhuma conversa encontrada</div>`;
+    return;
+  }
+
+  // Separa fixadas / não-fixadas
+  const pinned   = filtered.filter(c => pinnedConvs.includes(c.phone));
+  const unpinned = filtered.filter(c => !pinnedConvs.includes(c.phone));
+
+  if (pinned.length > 0) {
+    const div = document.createElement("div");
+    div.className = "pinned-divider";
+    div.textContent = "📌 Fixadas";
+    list.appendChild(div);
+    pinned.forEach(c => list.appendChild(buildConvItem(c)));
+  }
+
+  unpinned.forEach(c => list.appendChild(buildConvItem(c)));
+}
+
+function buildConvItem(c) {
+  const isArchiveConv = c.isArchive || false;
+  const convKey    = c.redisKey || `sartec:${c.phone}`;
+  const isUnread   = !isArchiveConv && unreadConvs.includes(c.phone);
+  const isPinned   = !isArchiveConv && pinnedConvs.includes(c.phone);
+  const isHandoff  = c.status === "aguardando_humano";
+  const isResolved = c.status === "resolvido";
+  // Só mostra dot de status quando relevante (handoff pendente ou resolvido)
+  const statusDot  = isHandoff ? "🔵" : isResolved ? "✅" : "";
+
+  const item = document.createElement("div");
+  item.className = "conv-item"
+    + (convKey === openConvsRedisKey ? " active"      : "")
+    + (isUnread                      ? " unread-item" : "")
+    + (isArchiveConv                 ? " archived-conv": "");
+  item.dataset.phone   = c.phone;
+  item.dataset.convKey = convKey;
+
+  item.innerHTML = `
+    <div class="conv-avatar-wrap">
+      <div class="conv-avatar ${c.clientType === "pj" ? "pj" : ""}">${esc(initials(c.clientName))}</div>
+      ${isPinned ? `<span class="conv-pin-indicator" title="Fixada">📌</span>` : ""}
+    </div>
+    <div class="conv-info">
+      <div class="conv-name-row">
+        <span class="conv-name">${esc(c.clientName)}</span>
+        <span class="conv-time">${relTime(c.lastActivity || c.archivedAt)}</span>
+      </div>
+      <div class="conv-preview">${esc(c.lastMessage || "—")}</div>
+      <div class="conv-meta">
+        <span class="demand-tag ${demandClass(c.demandType)}"
+          style="font-size:.55rem;padding:1px 5px">${demandLabel(c.demandType)}</span>
+        ${statusDot ? `<span style="font-size:.62rem">${statusDot}</span>` : ""}
+        ${isArchiveConv ? `<span class="conv-archive-badge">📁 arquivada</span>` : ""}
+      </div>
+    </div>
+    ${isUnread ? `<span class="conv-unread-dot" title="Não lida"></span>` : ""}
+    ${!isArchiveConv ? `<button class="conv-menu-btn"
+      onclick="openConvMenu(event,'${esc(c.phone)}')"
+      title="Opções">⋮</button>` : ""}
+  `;
+  item.onclick = () => openConvsChat(c.phone, c.redisKey, c.isArchive);
+  return item;
+}
+
+async function openConvsChat(phone, redisKey, isArchive) {
+  openConvsPhone    = phone;
+  openConvsRedisKey = redisKey || `sartec:${phone}`;
+
+  // Marca como lida ao abrir (apenas para sessões ativas)
+  if (!isArchive) markAsRead(phone);
+
+  // Marca ativo na lista (usa convKey para diferenciar archives do mesmo phone)
+  document.querySelectorAll(".conv-item").forEach(el => {
+    el.classList.toggle("active", el.dataset.convKey === openConvsRedisKey);
+    el.classList.toggle("unread-item", el.dataset.convKey !== openConvsRedisKey && unreadConvs.includes(el.dataset.phone));
+  });
+
+  // Monta área de chat se não existir
+  const main = document.getElementById("convs-main");
+  main.innerHTML = "";
+
+  const chatArea = document.createElement("div");
+  chatArea.id = "convs-chat-area";
+  chatArea.style.cssText = "display:flex;flex-direction:column;height:100%;overflow:hidden";
+
+  chatArea.innerHTML = `
+    <div style="background:var(--brand-navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div id="convs-chat-name" style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Carregando...</div>
+        <div id="convs-chat-sub" style="font-size:.7rem;opacity:.75;display:flex;gap:8px;margin-top:2px"></div>
+      </div>
+      ${!isArchive ? `<button onclick="resolveConversation('convs')"
+        style="background:var(--brand-red);border:none;color:#fff;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:.75rem;font-weight:700">
+        Resolver
+      </button>` : `<span style="background:#555;color:#ccc;padding:5px 12px;border-radius:7px;font-size:.75rem;font-weight:700">📁 Arquivada</span>`}
+    </div>
+    <!-- Barra de janela de 24h -->
+    <div class="window-status-bar ws-unknown" id="convs-window-bar"></div>
+    <div class="messages" id="convs-messages" style="flex:1;overflow-y:auto;padding:14px"></div>
+    ${!isArchive ? `<div class="composer">
+      <div class="img-preview-bar" id="convs-img-preview-bar">
+        <img id="convs-img-thumb" src="" alt="preview">
+        <input class="caption-input" id="convs-img-caption" placeholder="Legenda (opcional)">
+        <button class="btn-clear-img" onclick="clearImage('convs')" title="Remover">✕</button>
+      </div>
+      <div class="composer-lock-bar" id="convs-composer-lock" style="display:none"></div>
+      <div class="composer-row">
+        <button class="btn-attach" onclick="document.getElementById('convs-file-input').click()" title="Imagem">📎</button>
+        <input type="file" id="convs-file-input" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" style="display:none" onchange="handleImageSelect(event,'convs')">
+        <textarea id="convs-msg-input" placeholder="Digite sua mensagem..." rows="1"
+          onkeydown="handleEnter(event,'convs')" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="convs-send-btn" onclick="sendMessage('convs')">Enviar</button>
+      </div>
+    </div>` : `<div style="padding:10px 16px;text-align:center;font-size:.75rem;color:#888;background:#f5f5f5;border-top:1px solid #e5e5e5;flex-shrink:0">
+      📁 Conversa arquivada — somente leitura
+    </div>`}
+  `;
+
+  main.appendChild(chatArea);
+
+  await refreshConvsChat(phone, openConvsRedisKey);
+  // Não faz polling para archives — o histórico não muda
+  if (!isArchive) startConvsChatPoll(phone, openConvsRedisKey);
+}
+
+async function refreshConvsChat(phone, redisKey) {
+  try {
+    // Se tem redisKey de archive, busca por ela diretamente
+    const rk  = redisKey || openConvsRedisKey;
+    const url  = (rk && rk.includes(":archive:"))
+      ? `/api/conversation?key=${encodeURIComponent(rk)}`
+      : `/api/conversation?phone=${phone}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    renderConvsChat(data);
+  } catch (e) { console.error("[refreshConvsChat]", e); }
+}
+
+function renderConvsChat(data) {
+  const nameEl = document.getElementById("convs-chat-name");
+  const subEl  = document.getElementById("convs-chat-sub");
+  if (!nameEl) return;
+
+  nameEl.textContent = data.clientName || data.phone || "—";
+  if (subEl) {
+    subEl.innerHTML = `
+      <span class="demand-tag ${demandClass(data.demandType)}" style="font-size:.6rem;padding:1px 5px">${demandLabel(data.demandType)}</span>
+      <span>${pipelineLabel(data.pipelineStatus, data.clientType)}</span>
+    `;
+  }
+
+  // Janela de 24h
+  updateWindowUI("convs", data);
+
+  const container = document.getElementById("convs-messages");
+  if (!container) return;
+
+  const optimistic = Array.from(container.querySelectorAll(".optimistic"))
+    .map(el => ({ content: el.dataset.content, mediaType: el.dataset.mediaType || null }));
+
+  container.innerHTML = "";
+  for (const msg of data.history || []) appendBubble(container, msg);
+
+  const serverContents = new Set(
+    (data.history || []).filter(m => m.sentByHuman).map(m => m.content)
+  );
+  for (const o of optimistic) {
+    if (!serverContents.has(o.content)) {
+      appendBubble(container, { role:"assistant", content:o.content, sentByHuman:true,
+        mediaType: o.mediaType }, true);
+    }
+  }
+  scrollToBottom(container);
+}
+
+function startConvsPoll() {
+  stopConvsPoll();
+  convsPollTimer = setInterval(loadConversations, 10000);
+}
+
+function stopConvsPoll() {
+  clearInterval(convsPollTimer);
+  convsPollTimer = null;
+}
+
+let convsChatPollTimer = null;
+function startConvsChatPoll(phone, redisKey) {
+  clearInterval(convsChatPollTimer);
+  convsChatPollTimer = setInterval(() => refreshConvsChat(phone, redisKey), 5000);
+}
+function stopConvsChatPoll() { clearInterval(convsChatPollTimer); }
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  DADOS DO PEDIDO                                             ║
+// ╚══════════════════════════════════════════════════════════════╝
+function populateDadosForm(prefix, data) {
+  const s = (id) => document.getElementById(`${prefix}-${id}`);
+  if (!s("dataLimite")) return;
+
+  // Toggle de data limite — ativo se tiver valor
+  const hasDate = !!data.dataLimite;
+  const toggleEl = document.getElementById(`${prefix}-dataLimite-toggle`);
+  const dateRow  = document.getElementById(`${prefix}-dataLimite-row`);
+  if (toggleEl) toggleEl.checked = hasDate;
+  if (dateRow)  dateRow.style.display = hasDate ? "block" : "none";
+
+  s("dataLimite").value   = data.dataLimite   || "";
+  s("formaEntrega").value = data.formaEntrega || "";
+  s("endereco").value     = data.endereco     || "";
+  s("observacoes").value  = data.observacoes  || "";
+  s("escola").value       = data.escola       || "";
+  s("serie").value        = data.serie        || "";
+
+  const camposLista = document.getElementById(`${prefix}-campos-lista`);
+  if (camposLista) camposLista.style.display = data.demandType === "lista" ? "contents" : "none";
+
+  toggleEndereco(prefix);
+}
+
+function toggleEndereco(prefix) {
+  const val = document.getElementById(`${prefix}-formaEntrega`)?.value;
+  const row = document.getElementById(`${prefix}-row-endereco`);
+  if (row) row.style.display = val === "entrega" ? "flex" : "none";
+}
+
+async function saveCardData(prefix) {
+  const phone = prefix === "modal" ? openModalPhone : openConvsPhone;
+  if (!phone) return;
+  const btn = document.getElementById(`${prefix}-btn-save`);
+  const s   = (id) => document.getElementById(`${prefix}-${id}`)?.value || "";
+
+  const toggleEl = document.getElementById(`${prefix}-dataLimite-toggle`);
+  const dataLimite = (toggleEl && !toggleEl.checked) ? "" : s("dataLimite");
+
+  const payload = {
+    phone,
+    dataLimite,
+    formaEntrega: s("formaEntrega"),
+    endereco:     s("endereco"),
+    observacoes:  s("observacoes"),
+    escola:       s("escola"),
+    serie:        s("serie"),
+  };
+
+  try {
+    const res = await fetch("/api/update-card", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      btn.textContent = "Salvo ✓";
+      btn.classList.add("saved");
+      setTimeout(() => { btn.textContent = "Salvar dados"; btn.classList.remove("saved"); }, 2200);
+    } else {
+      const err = await res.json();
+      alert(`Erro: ${err.error}`);
+    }
+  } catch { alert("Falha de rede ao salvar."); }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  BOLHAS DE MENSAGEM                                          ║
+// ╚══════════════════════════════════════════════════════════════╝
+function appendBubble(container, msg, optimistic = false) {
+  const { role, content, sentByHuman, mediaType, mediaData, mediaMimeType, mediaFilename } = msg;
+
+  const wrap = document.createElement("div");
+  wrap.className = `bubble-wrap ${role === "user" ? "left" : "right"}`;
+
+  const bubble = document.createElement("div");
+  let cls = "client", label = "";
+  if (role !== "user") {
+    cls   = sentByHuman ? "human" : "bot";
+    label = sentByHuman ? "Você" : "Bot";
+  }
+  bubble.className = `bubble ${cls}${optimistic ? " optimistic" : ""}`;
+  if (optimistic) {
+    bubble.dataset.content   = content || "";
+    bubble.dataset.mediaType = mediaType || "";
+  }
+
+  // ── Imagem ──
+  if (mediaType === "image" && mediaData) {
+    const img       = document.createElement("img");
+    img.className   = "bubble-img";
+    img.src         = `data:${mediaMimeType || "image/jpeg"};base64,${mediaData}`;
+    img.alt         = "imagem";
+    img.title       = "Clique para ampliar";
+    img.onclick     = () => openMediaModal(mediaData, mediaMimeType || "image/jpeg");
+    bubble.appendChild(img);
+    if (content) {
+      const txt = document.createElement("div");
+      txt.style.marginTop = "5px";
+      txt.textContent = content;
+      bubble.appendChild(txt);
+    }
+
+  // ── PDF / Documento ──
+  } else if ((mediaType === "document" || mediaMimeType === "application/pdf") && mediaData) {
+    const fname = mediaFilename || "Documento PDF";
+    const card = buildMediaCard("📄", fname, mediaData, mediaMimeType || "application/pdf", true);
+    bubble.appendChild(card);
+    if (content) {
+      const txt = document.createElement("div");
+      txt.style.marginTop = "5px";
+      txt.textContent = content;
+      bubble.appendChild(txt);
+    }
+
+  // ── Planilha ──
+  } else if (mediaData && (
+    mediaMimeType?.includes("spreadsheet") ||
+    mediaMimeType?.includes("excel") ||
+    mediaMimeType?.includes("xlsx") ||
+    mediaMimeType?.includes("xls")
+  )) {
+    const card = buildMediaCard("📊", "Planilha", mediaData, mediaMimeType, false);
+    bubble.appendChild(card);
+
+  // ── Áudio ──
+  } else if (mediaType === "audio" && mediaData) {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src      = `data:${mediaMimeType || "audio/ogg"};base64,${mediaData}`;
+    audio.style.maxWidth = "220px";
+    bubble.appendChild(audio);
+
+  // ── Texto ──
+  } else {
+    bubble.textContent = content || "[mídia]";
+  }
+
+  wrap.appendChild(bubble);
+
+  if (label) {
+    const lbl = document.createElement("div");
+    lbl.className   = "bubble-label";
+    lbl.textContent = label;
+    wrap.appendChild(lbl);
+  }
+
+  container.appendChild(wrap);
+}
+
+function storeMedia(base64, mimeType) {
+  const key = `m_${mediaStoreIdx++}`;
+  mediaStore[key] = { base64, mimeType };
+  return key;
+}
+
+function buildMediaCard(icon, name, base64, mimeType, canView) {
+  const key  = storeMedia(base64, mimeType);
+  const card = document.createElement("div");
+  card.className = "media-card";
+
+  const actionsHtml = canView
+    ? `<button class="btn-media" onclick="viewMedia('${key}')">Visualizar</button>
+       <button class="btn-media" onclick="dlMedia('${key}','${esc(name)}')">Baixar</button>`
+    : `<button class="btn-media" onclick="dlMedia('${key}','${esc(name)}')">Baixar</button>`;
+
+  card.innerHTML = `
+    <span class="media-icon">${icon}</span>
+    <div class="media-info">
+      <div class="media-name">${esc(name)}</div>
+      <div class="media-actions">${actionsHtml}</div>
+    </div>
+  `;
+  return card;
+}
+
+function viewMedia(key) {
+  const m = mediaStore[key];
+  if (!m) return;
+  if (m.mimeType === "application/pdf") {
+    openPdfModal(m.base64);
+  } else {
+    const url = base64ToBlobUrl(m.base64, m.mimeType);
+    if (url) window.open(url, "_blank");
+  }
+}
+
+function dlMedia(key, name) {
+  const m = mediaStore[key];
+  if (!m) return;
+  const url = base64ToBlobUrl(m.base64, m.mimeType);
+  if (!url) return;
+  const a   = document.createElement("a");
+  a.href    = url;
+  a.download = name || "arquivo";
+  a.click();
+}
+
+function scrollToBottom(el) { el.scrollTop = el.scrollHeight; }
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MEDIA MODAL (imagem fullscreen)                             ║
+// ╚══════════════════════════════════════════════════════════════╝
+let imgZoom = 1;
+
+function openMediaModal(base64, mimeType) {
+  mediaModalBase64 = base64;
+  mediaModalMime   = mimeType;
+  imgZoom = 1;
+  const img = document.getElementById("media-modal-img");
+  img.src   = `data:${mimeType};base64,${base64}`;
+  img.style.transform = "scale(1)";
+  img.onclick = () => {
+    imgZoom = imgZoom >= 3 ? 1 : imgZoom + 0.5;
+    img.style.transform = `scale(${imgZoom})`;
+    img.style.cursor = imgZoom > 1 ? "zoom-out" : "zoom-in";
+  };
+  document.getElementById("media-modal").classList.remove("hidden");
+}
+
+function closeMediaModal() {
+  document.getElementById("media-modal").classList.add("hidden");
+  mediaModalBase64 = null;
+  mediaModalMime   = null;
+}
+
+function downloadMediaModal() {
+  if (!mediaModalBase64) return;
+  const url  = base64ToBlobUrl(mediaModalBase64, mediaModalMime || "image/jpeg");
+  if (!url) return;
+  const ext  = (mediaModalMime || "image/jpeg").split("/")[1] || "jpg";
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `imagem.${ext}`;
+  a.click();
+}
+
+// Fechar modais com ESC
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (!document.getElementById("new-convo-modal").classList.contains("hidden")) {
+      closeNewConvoModal(); return;
+    }
+    if (!document.getElementById("template-modal").classList.contains("hidden")) {
+      closeTemplateModal(); return;
+    }
+    if (!document.getElementById("conv-ctx-menu").classList.contains("hidden")) {
+      closeConvMenu(); return;
+    }
+    if (!document.getElementById("pdf-modal").classList.contains("hidden")) {
+      closePdfModal(); return;
+    }
+    if (!document.getElementById("cat-modal").classList.contains("hidden")) {
+      closeCatManager(); return;
+    }
+    closeMediaModal();
+    if (!document.getElementById("confirm-modal").classList.contains("hidden")) {
+      confirmResolve(false);
+    }
+  }
+});
+
+// Clique fora da imagem fecha o modal
+document.getElementById("media-modal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("media-modal")) closeMediaModal();
+});
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  IMAGEM — seleção e preview                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+function handleImageSelect(event, prefix) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const isPdf = file.type === "application/pdf";
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const base64  = dataUrl.split(",")[1];
+
+    pendingMedia[prefix] = {
+      type:     isPdf ? "document" : "image",
+      base64,
+      mimeType: file.type,
+      filename: file.name,
+    };
+
+    const thumb = document.getElementById(`${prefix}-img-thumb`);
+    if (isPdf) {
+      // Mostra ícone PDF no preview
+      thumb.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect width='50' height='50' fill='%23fee2e2' rx='6'/%3E%3Ctext x='25' y='33' text-anchor='middle' font-size='22'%3E%F0%9F%93%84%3C/text%3E%3C/svg%3E";
+      const cap = document.getElementById(`${prefix}-img-caption`);
+      if (cap) { cap.value = ""; cap.placeholder = file.name; }
+    } else {
+      thumb.src = dataUrl;
+      const cap = document.getElementById(`${prefix}-img-caption`);
+      if (cap) cap.placeholder = "Legenda (opcional)";
+    }
+
+    document.getElementById(`${prefix}-img-preview-bar`).classList.add("visible");
+  };
+  reader.readAsDataURL(file);
+  event.target.value = "";
+}
+
+function clearImage(prefix) {
+  pendingMedia[prefix] = null;
+  const bar = document.getElementById(`${prefix}-img-preview-bar`);
+  if (bar) bar.classList.remove("visible");
+  const thumb = document.getElementById(`${prefix}-img-thumb`);
+  if (thumb) thumb.src = "";
+  const cap = document.getElementById(`${prefix}-img-caption`);
+  if (cap) cap.value = "";
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ENVIO DE MENSAGEM                                           ║
+// ╚══════════════════════════════════════════════════════════════╝
+function getPhoneForPrefix(prefix) {
+  return prefix === "modal" ? openModalPhone : openConvsPhone;
+}
+
+async function sendMessage(prefix) {
+  const phone = getPhoneForPrefix(prefix);
+  if (!phone) return;
+
+  // ── Guard de janela de 24h ─────────────────────────────────────────────────
+  // Impede envio de mensagem livre quando a janela está fechada ou aguardando template.
+  const windowBar = document.getElementById(`${prefix}-window-bar`);
+  if (windowBar) {
+    if (windowBar.classList.contains("ws-closed") || windowBar.classList.contains("ws-waiting")) {
+      return; // Silenciosamente bloqueado — o lock visual já informa o motivo
+    }
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const input  = document.getElementById(`${prefix}-msg-input`);
+  const text   = input?.value.trim() || "";
+  const hasPending = !!pendingMedia[prefix];
+
+  if (!text && !hasPending) return;
+
+  const btn = document.getElementById(`${prefix}-send-btn`);
+  if (btn) btn.disabled = true;
+  if (input) { input.value = ""; autoResize(input); }
+
+  const messagesId = prefix === "modal" ? "modal-messages" : "convs-messages";
+  const container  = document.getElementById(messagesId);
+
+  if (hasPending) {
+    const mtype = pendingMedia[prefix].type;
+    if (mtype === "document") {
+      await sendDocumentMessage(prefix, container, text);
+    } else {
+      await sendImageMessage(prefix, container, text);
+    }
+  } else {
+    await sendTextMessage(prefix, container, text);
+  }
+
+  if (btn) btn.disabled = false;
+  if (input) input.focus();
+}
+
+async function sendTextMessage(prefix, container, text) {
+  const phone = getPhoneForPrefix(prefix);
+  appendBubble(container, { role:"assistant", content:text, sentByHuman:true }, true);
+  scrollToBottom(container);
+
+  try {
+    const res = await fetch("/api/send", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ to: phone, type: "text", message: text }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro ao enviar: ${err.error}`);
+      removeLastOptimistic(container);
+    } else {
+      prefix === "modal" ? await refreshModal() : await refreshConvsChat(phone);
+    }
+  } catch (e) { alert("Falha de rede."); removeLastOptimistic(container); }
+}
+
+async function sendImageMessage(prefix, container, caption) {
+  const phone = getPhoneForPrefix(prefix);
+  const { base64, mimeType } = pendingMedia[prefix];
+
+  appendBubble(container, {
+    role:"assistant", content:caption, sentByHuman:true,
+    mediaType:"image", mediaData:base64, mediaMimeType:mimeType,
+  }, true);
+  scrollToBottom(container);
+  clearImage(prefix);
+
+  try {
+    const res = await fetch("/api/send", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ to: phone, type: "image", mediaBase64: base64, mimeType, caption }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro ao enviar imagem: ${err.error}`);
+      removeLastOptimistic(container);
+    } else {
+      prefix === "modal" ? await refreshModal() : await refreshConvsChat(phone);
+    }
+  } catch (e) { alert("Falha de rede."); removeLastOptimistic(container); }
+}
+
+async function sendDocumentMessage(prefix, container, caption) {
+  const phone = getPhoneForPrefix(prefix);
+  const { base64, mimeType, filename } = pendingMedia[prefix];
+
+  // Bolha otimista com ícone de documento
+  appendBubble(container, {
+    role: "assistant", content: caption, sentByHuman: true,
+    mediaType: "document", mediaData: base64, mediaMimeType: mimeType, mediaFilename: filename,
+  }, true);
+  scrollToBottom(container);
+  clearImage(prefix);
+
+  try {
+    const res = await fetch("/api/send", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ to: phone, type: "document", mediaBase64: base64, mimeType, filename, caption }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro ao enviar documento: ${err.error}`);
+      removeLastOptimistic(container);
+    } else {
+      prefix === "modal" ? await refreshModal() : await refreshConvsChat(phone);
+    }
+  } catch (e) { alert("Falha de rede."); removeLastOptimistic(container); }
+}
+
+function removeLastOptimistic(container) {
+  const all = container.querySelectorAll(".optimistic");
+  if (all.length) all[all.length - 1].closest(".bubble-wrap")?.remove();
+}
+
+function handleEnter(event, prefix) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage(prefix);
+  }
+}
+
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 110) + "px";
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  RESOLVER CONVERSA                                           ║
+// ╚══════════════════════════════════════════════════════════════╝
+function resolveConversation(prefix) {
+  const phone = getPhoneForPrefix(prefix);
+  if (!phone) return;
+
+  const name = prefix === "modal"
+    ? document.getElementById("modal-chat-name")?.textContent
+    : document.getElementById("convs-chat-name")?.textContent;
+
+  document.getElementById("confirm-title").textContent = "Resolver conversa";
+  document.getElementById("confirm-text").textContent  =
+    `Marcar a conversa de "${name || phone}" como resolvida?`;
+  document.getElementById("confirm-modal").classList.remove("hidden");
+
+  resolveCallback = async () => {
+    try {
+      const res = await fetch("/api/resolve", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ phone }),
+      });
+      if (res.ok) {
+        if (prefix === "modal") closeModal();
+        else {
+          // Remove da lista e limpa chat area
+          openConvsPhone    = null;
+          openConvsRedisKey = null;
+          stopConvsChatPoll();
+          document.getElementById("convs-main").innerHTML = `
+            <div class="convs-empty">
+              <div class="convs-empty-icon">✅</div>
+              <div class="convs-empty-text">Conversa resolvida</div>
+            </div>`;
+          loadConversations();
+        }
+        // Atualiza pipeline local
+        const conv = allConvs.find(c => c.phone === phone);
+        if (conv) { conv.status = "resolvido"; conv.resolvedAt = new Date().toISOString(); }
+        renderPipeline(allConvs);
+        updateHeader(allConvs);
+      } else {
+        const err = await res.json();
+        alert(`Erro: ${err.error}`);
+      }
+    } catch { alert("Falha de rede."); }
+  };
+}
+
+function confirmResolve(confirmed) {
+  document.getElementById("confirm-modal").classList.add("hidden");
+  if (confirmed && resolveCallback) resolveCallback();
+  resolveCallback = null;
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  VISIBILIDADE — pausa polling quando aba fica inativa        ║
+// ╚══════════════════════════════════════════════════════════════╝
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopAutoRefresh();
+  } else {
+    loadQueue();
+    startAutoRefresh();
+    if (currentTab === "convs") loadConversations();
+  }
+});
+
+// Cleanup ao fechar aba
+window.addEventListener("beforeunload", () => {
+  stopAutoRefresh();
+  stopConvsPoll();
+  stopConvsChatPoll();
+});
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  JANELA DE 24H — UI                                          ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+/**
+ * Atualiza a barra de status da janela e bloqueia/libera o compositor.
+ * `data` deve conter conversationWindowStatus, windowRemainingMs, windowExpiresAt.
+ */
+function updateWindowUI(prefix, data) {
+  const bar  = document.getElementById(`${prefix}-window-bar`);
+  if (!bar) return;
+
+  const ws = data.conversationWindowStatus;
+
+  // Limpa estado anterior
+  bar.className = "window-status-bar";
+
+  if (!ws || ws === "open") {
+    // Janela aberta — mostra tempo restante
+    const ms   = data.windowRemainingMs || 0;
+    const h    = Math.floor(ms / 3_600_000);
+    const m    = Math.floor((ms % 3_600_000) / 60_000);
+    const hStr = h > 0 ? `${h}h ` : "";
+    const mStr = `${m}min`;
+
+    let expiresStr = "";
+    if (data.windowExpiresAt) {
+      expiresStr = new Date(data.windowExpiresAt)
+        .toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    bar.classList.add("ws-open");
+    bar.innerHTML = `
+      <span class="ws-icon">🟢</span>
+      <span class="ws-label">Janela aberta${expiresStr ? ` até ${expiresStr}` : ""}</span>
+      <span class="ws-detail">— Restam ${hStr}${mStr} para responder livremente</span>
+    `;
+    unlockComposer(prefix);
+
+  } else if (ws === "waiting_template_reply") {
+    bar.classList.add("ws-waiting");
+    bar.innerHTML = `
+      <span class="ws-icon">🟡</span>
+      <span class="ws-label">Template enviado.</span>
+      <span class="ws-detail">Aguardando resposta do cliente para retomar.</span>
+    `;
+    lockComposer(prefix, "waiting");
+
+  } else {
+    // closed
+    bar.classList.add("ws-closed");
+    bar.innerHTML = `
+      <span class="ws-icon">🔴</span>
+      <span class="ws-label">Janela encerrada.</span>
+      <span class="ws-detail">Envie um template para retomar o contato.</span>
+    `;
+    lockComposer(prefix, "closed");
+  }
+}
+
+function lockComposer(prefix, reason) {
+  const textarea = document.getElementById(`${prefix}-msg-input`);
+  const sendBtn  = document.getElementById(`${prefix}-send-btn`);
+  const fileInput = document.getElementById(`${prefix}-file-input`);
+  const lockBar  = document.getElementById(`${prefix}-composer-lock`);
+
+  if (textarea)  { textarea.disabled = true;  textarea.placeholder = "Janela encerrada"; }
+  if (sendBtn)   sendBtn.disabled = true;
+  if (fileInput) fileInput.disabled = true;
+
+  if (lockBar) {
+    lockBar.style.display = "flex";
+    if (reason === "waiting") {
+      lockBar.className = "composer-lock-bar ws-waiting-lock";
+      lockBar.innerHTML = `<span>⏳ Aguardando resposta do cliente ao template enviado. Quando o cliente responder, a janela reabre.</span>`;
+    } else {
+      lockBar.className = "composer-lock-bar";
+      lockBar.innerHTML = `
+        <span>🔒 Janela de 24h encerrada. Não é possível enviar mensagens livres.</span>
+        <button class="btn-send-template" onclick="onSendTemplate('${prefix}')">Enviar template</button>
+      `;
+    }
+  }
+}
+
+function unlockComposer(prefix) {
+  const textarea = document.getElementById(`${prefix}-msg-input`);
+  const sendBtn  = document.getElementById(`${prefix}-send-btn`);
+  const fileInput = document.getElementById(`${prefix}-file-input`);
+  const lockBar  = document.getElementById(`${prefix}-composer-lock`);
+
+  if (textarea)  { textarea.disabled = false; textarea.placeholder = "Digite sua mensagem..."; }
+  if (sendBtn)   sendBtn.disabled = false;
+  if (fileInput) fileInput.disabled = false;
+  if (lockBar)   lockBar.style.display = "none";
+}
+
+// onSendTemplate está definida na seção TEMPLATES WHATSAPP acima
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  TEMPLATES WHATSAPP                                          ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+let templateModalPrefix  = null;  // "modal" | "convs"
+let selectedTemplateType = null;
+
+// Configuração local dos templates — usada para renderizar o modal e o preview.
+// O nome real do template na Meta vem das env vars no backend (não fica hardcoded aqui).
+const TEMPLATE_CONFIGS = {
+  attendance_resume: {
+    title:   "↩ Retomar atendimento",
+    text:    "Olá, {{1}}. Aqui é da Sartec Papelaria. Recebemos sua solicitação sobre {{2}} e queremos continuar seu atendimento. Pode responder esta mensagem para seguirmos por aqui?",
+    vars: [
+      { label: "Nome do cliente",          placeholder: "Ex: João Silva",             defaultKey: "clientName" },
+      { label: "Assunto do atendimento",   placeholder: "Ex: lista escolar, papel contact..." },
+    ],
+  },
+  budget_update: {
+    title:   "📋 Orçamento",
+    text:    "Olá, {{1}}. Aqui é da Sartec Papelaria. Temos uma atualização sobre seu orçamento de {{2}}. Pode responder para continuarmos?",
+    vars: [
+      { label: "Nome do cliente",          placeholder: "Ex: Maria",                  defaultKey: "clientName" },
+      { label: "Descrição do orçamento",   placeholder: "Ex: resma A4, materiais de escritório..." },
+    ],
+  },
+  pj_prospecting: {
+    title:   "🏢 Prospecção PJ",
+    text:    "Olá, {{1}}. Aqui é da Sartec Papelaria. Atendemos empresas com materiais de escritório e reposição recorrente. Podemos te enviar mais informações?",
+    vars: [
+      { label: "Nome do contato ou empresa", placeholder: "Ex: Carlos / Empresa XYZ", defaultKey: "clientName" },
+    ],
+  },
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MODAL — NOVA CONVERSA                                       ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+let ncmSelectedType = null;  // tipo de template selecionado no modal nova conversa
+
+function openNewConvoModal() {
+  ncmSelectedType = null;
+
+  // Limpa campos
+  document.getElementById("ncm-phone").value       = "";
+  document.getElementById("ncm-name").value        = "";
+  document.getElementById("ncm-client-type").value = "pf";
+
+  // Remove seleção de cards
+  document.querySelectorAll("#ncm-tmpl-options .tmpl-card")
+    .forEach(c => c.classList.remove("selected"));
+
+  document.getElementById("ncm-vars-section").style.display = "none";
+  document.getElementById("btn-ncm-submit").disabled = true;
+
+  document.getElementById("new-convo-modal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("ncm-phone").focus(), 80);
+}
+
+function closeNewConvoModal() {
+  document.getElementById("new-convo-modal").classList.add("hidden");
+  ncmSelectedType = null;
+}
+
+// Normaliza telefone para formato Meta: apenas dígitos, com DDI
+function normalizePhoneForMeta(raw) {
+  let n = (raw || "").replace(/\D/g, "");
+  if (n.startsWith("0")) n = n.slice(1);
+  // Se parecer número brasileiro sem DDI (10 ou 11 dígitos)
+  if (n.length === 11 || n.length === 10) n = "55" + n;
+  return n;
+}
+
+function getNcmPhone()    { return normalizePhoneForMeta(document.getElementById("ncm-phone").value); }
+function getNcmName()     { return document.getElementById("ncm-name").value.trim(); }
+function getNcmType()     { return document.getElementById("ncm-client-type").value; }
+
+function onNcmPhoneInput() { updateNcmSubmitState(); }
+function onNcmNameInput()  { updateNcmPreview(); updateNcmSubmitState(); }
+
+function updateNcmSubmitState() {
+  const phone  = getNcmPhone();
+  const ready  = phone.length >= 12 && !!ncmSelectedType;
+  document.getElementById("btn-ncm-submit").disabled = !ready;
+}
+
+// Seleciona template no modal nova conversa
+function selectNcmTemplate(type) {
+  ncmSelectedType = type;
+  const config = TEMPLATE_CONFIGS[type];
+
+  document.querySelectorAll("#ncm-tmpl-options .tmpl-card")
+    .forEach(c => c.classList.toggle("selected", c.dataset.ncmType === type));
+
+  // Renderiza campos de variáveis — pré-preenche nome se já digitado
+  const defaultName = getNcmName();
+  const form = document.getElementById("ncm-vars-form");
+  form.innerHTML = config.vars.map((v, i) => {
+    const val = (v.defaultKey === "clientName" && defaultName) ? defaultName : "";
+    return `
+      <div class="tmpl-var-row">
+        <label>{{${i + 1}}} — ${esc(v.label)}</label>
+        <input type="text" id="ncm-var-${i}"
+          placeholder="${esc(v.placeholder)}"
+          value="${esc(val)}"
+          oninput="updateNcmPreview()"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitNewConvo();}">
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("ncm-vars-section").style.display = "flex";
+
+  // Foca no primeiro campo vazio
+  for (let i = 0; i < config.vars.length; i++) {
+    const inp = document.getElementById(`ncm-var-${i}`);
+    if (inp && !inp.value) { inp.focus(); break; }
+  }
+
+  updateNcmPreview();
+  updateNcmSubmitState();
+}
+
+// Atualiza preview em tempo real com os valores digitados
+function updateNcmPreview() {
+  if (!ncmSelectedType) return;
+  const config = TEMPLATE_CONFIGS[ncmSelectedType];
+  let text = esc(config.text);
+
+  config.vars.forEach((_, i) => {
+    const raw = document.getElementById(`ncm-var-${i}`)?.value || "";
+    const display = raw
+      ? `<mark>${esc(raw)}</mark>`
+      : `<mark style="opacity:.5;font-weight:400">{{${i + 1}}}</mark>`;
+    text = text.replace(`{{${i + 1}}}`, display);
+  });
+
+  document.getElementById("ncm-preview").innerHTML = text;
+}
+
+// Envia a nova conversa por template
+async function submitNewConvo() {
+  if (!ncmSelectedType) return;
+
+  const phone    = getNcmPhone();
+  const name     = getNcmName();
+  const cType    = getNcmType();
+  const config   = TEMPLATE_CONFIGS[ncmSelectedType];
+  const variables = config.vars.map((_, i) =>
+    (document.getElementById(`ncm-var-${i}`)?.value || "").trim()
+  );
+
+  // Valida telefone
+  const phoneInput = document.getElementById("ncm-phone");
+  if (phone.length < 12) {
+    phoneInput.classList.add("input-error");
+    setTimeout(() => phoneInput.classList.remove("input-error"), 2000);
+    phoneInput.focus();
+    return;
+  }
+
+  // Valida variáveis obrigatórias
+  let hasEmpty = false;
+  config.vars.forEach((_, i) => {
+    const inp = document.getElementById(`ncm-var-${i}`);
+    if (!variables[i]) {
+      hasEmpty = true;
+      inp?.classList.add("input-error");
+      setTimeout(() => inp?.classList.remove("input-error"), 2000);
+    }
+  });
+  if (hasEmpty) return;
+
+  const btn = document.getElementById("btn-ncm-submit");
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enviando...";
+
+  try {
+    const res = await fetch("/api/send-template", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        to:           phone,
+        templateType: ncmSelectedType,
+        variables,
+        clientName:   name || "—",
+        clientType:   cType,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const detail = data.detail ? `\n${data.detail}` : "";
+      alert(`Erro ao iniciar conversa:\n${data.error}${detail}`);
+      btn.disabled = false;
+      btn.textContent = origText;
+      return;
+    }
+
+    // Sucesso — fecha modal e recarrega lista de conversas
+    closeNewConvoModal();
+
+    // Se a aba Conversas está ativa, recarrega imediatamente
+    if (currentTab === "convs") {
+      await loadConversations();
+    }
+
+    console.log(`[Nova conversa] ✅ Template "${data.templateName}" → +${phone} (${name})`);
+
+  } catch (err) {
+    alert("Falha de rede ao iniciar conversa.");
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+// Abre o modal a partir do botão "Enviar template" no lock do compositor
+function onSendTemplate(prefix) {
+  templateModalPrefix  = prefix;
+  selectedTemplateType = null;
+
+  // Reseta seleção e campos
+  document.querySelectorAll(".tmpl-card").forEach(c => c.classList.remove("selected"));
+  document.getElementById("tmpl-vars-section").style.display = "none";
+  document.getElementById("btn-tmpl-submit").disabled = true;
+
+  document.getElementById("template-modal").classList.remove("hidden");
+}
+
+function closeTemplateModal() {
+  document.getElementById("template-modal").classList.add("hidden");
+  templateModalPrefix  = null;
+  selectedTemplateType = null;
+}
+
+// Chamado ao clicar em um dos 3 cards de template
+function selectTemplateType(type) {
+  selectedTemplateType = type;
+  const config = TEMPLATE_CONFIGS[type];
+
+  // Destaca o card selecionado
+  document.querySelectorAll(".tmpl-card").forEach(c =>
+    c.classList.toggle("selected", c.dataset.type === type)
+  );
+
+  // Busca o nome do cliente da conversa atual para pré-preencher {{1}}
+  const phone  = templateModalPrefix ? getPhoneForPrefix(templateModalPrefix) : null;
+  const conv   = allConvs.find(c => c.phone === phone);
+  const defaultName = (conv?.clientName && conv.clientName !== "—") ? conv.clientName : "";
+
+  // Renderiza os campos de variáveis
+  const form = document.getElementById("tmpl-vars-form");
+  form.innerHTML = config.vars.map((v, i) => {
+    const val = (v.defaultKey === "clientName" && defaultName) ? defaultName : "";
+    return `
+      <div class="tmpl-var-row">
+        <label>{{${i + 1}}} — ${esc(v.label)}</label>
+        <input type="text" id="tmpl-var-${i}"
+          placeholder="${esc(v.placeholder)}"
+          value="${esc(val)}"
+          oninput="updateTemplatePreview()"
+          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); submitTemplate(); }">
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("tmpl-vars-section").style.display = "block";
+  document.getElementById("btn-tmpl-submit").disabled = false;
+
+  // Foca no primeiro campo vazio
+  for (let i = 0; i < config.vars.length; i++) {
+    const inp = document.getElementById(`tmpl-var-${i}`);
+    if (inp && !inp.value) { inp.focus(); break; }
+  }
+
+  updateTemplatePreview();
+}
+
+// Atualiza o preview em tempo real substituindo {{n}} pelos valores digitados
+function updateTemplatePreview() {
+  if (!selectedTemplateType) return;
+  const config = TEMPLATE_CONFIGS[selectedTemplateType];
+
+  let text = esc(config.text);   // escapa o template base
+
+  config.vars.forEach((_, i) => {
+    const raw = document.getElementById(`tmpl-var-${i}`)?.value || "";
+    const display = raw
+      ? `<mark>${esc(raw)}</mark>`
+      : `<mark style="opacity:.5;font-weight:400">{{${i + 1}}}</mark>`;
+    text = text.replace(`{{${i + 1}}}`, display);  // já escapado, sem &amp; etc.
+  });
+
+  document.getElementById("tmpl-preview").innerHTML = text;
+}
+
+// Envia o template via POST /api/send-template
+async function submitTemplate() {
+  if (!templateModalPrefix || !selectedTemplateType) return;
+
+  const prefix = templateModalPrefix;   // captura antes de fechar
+  const phone  = getPhoneForPrefix(prefix);
+  if (!phone) return;
+
+  const config    = TEMPLATE_CONFIGS[selectedTemplateType];
+  const variables = config.vars.map((_, i) =>
+    (document.getElementById(`tmpl-var-${i}`)?.value || "").trim()
+  );
+
+  // Valida campos obrigatórios
+  let hasEmpty = false;
+  config.vars.forEach((_, i) => {
+    const inp = document.getElementById(`tmpl-var-${i}`);
+    if (!variables[i]) {
+      hasEmpty = true;
+      if (inp) {
+        inp.classList.add("input-error");
+        setTimeout(() => inp.classList.remove("input-error"), 2000);
+      }
+    }
+  });
+  if (hasEmpty) return;
+
+  const btn = document.getElementById("btn-tmpl-submit");
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enviando...";
+
+  try {
+    const res = await fetch("/api/send-template", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ to: phone, templateType: selectedTemplateType, variables }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const detail = data.detail ? `\n${data.detail}` : "";
+      alert(`Erro ao enviar template:\n${data.error}${detail}`);
+      btn.disabled = false;
+      btn.textContent = origText;
+      return;
+    }
+
+    // Sucesso — fecha modal e atualiza UI sem aguardar próximo poll
+    closeTemplateModal();
+    updateWindowUI(prefix, {
+      conversationWindowStatus: "waiting_template_reply",
+      windowRemainingMs: 0,
+      windowExpiresAt:   null,
+      lastUserMessageAt: null,
+    });
+
+    console.log(`[Template] ✅ "${data.templateName}" enviado para +${phone}`);
+
+  } catch (err) {
+    alert("Falha de rede ao enviar template.");
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MENU CONTEXTUAL DE CONVERSA                                 ║
+// ╚══════════════════════════════════════════════════════════════╝
+function openConvMenu(event, phone) {
+  event.stopPropagation();
+  convCtxPhone = phone;
+
+  // Atualiza labels de acordo com o estado atual
+  const isPinned = pinnedConvs.includes(phone);
+  const isUnread = unreadConvs.includes(phone);
+  document.getElementById("ctx-btn-pin").textContent    = isPinned ? "📌 Desafixar" : "📌 Fixar no topo";
+  document.getElementById("ctx-btn-unread").textContent = isUnread ? "✓  Marcar como lida" : "🔵 Marcar como não lida";
+
+  // Posiciona próximo ao botão ⋮ (alinha à direita dele)
+  const menu = document.getElementById("conv-ctx-menu");
+  menu.classList.remove("hidden");
+  const rect  = event.currentTarget.getBoundingClientRect();
+  const menuW = menu.offsetWidth || 192;
+  let   left  = rect.right - menuW;
+  if (left < 6) left = 6;
+  const top = rect.bottom + 4;
+  // Ajusta se sair da janela pela parte inferior
+  const maxTop = window.innerHeight - (menu.offsetHeight || 140) - 8;
+  menu.style.left = left + "px";
+  menu.style.top  = Math.min(top, maxTop) + "px";
+
+  // Fecha ao clicar fora
+  setTimeout(() => document.addEventListener("click", _onClickOutsideConvMenu, { once: true }), 0);
+}
+
+function _onClickOutsideConvMenu(e) {
+  const menu = document.getElementById("conv-ctx-menu");
+  if (menu && !menu.contains(e.target)) {
+    closeConvMenu();
+  } else {
+    // Clicou dentro (item disabled etc.) — re-attach
+    setTimeout(() => document.addEventListener("click", _onClickOutsideConvMenu, { once: true }), 0);
+  }
+}
+
+function closeConvMenu() {
+  document.getElementById("conv-ctx-menu").classList.add("hidden");
+  convCtxPhone = null;
+}
+
+function ctxPin() {
+  if (convCtxPhone) togglePin(convCtxPhone);
+  closeConvMenu();
+}
+
+function ctxUnread() {
+  if (convCtxPhone) toggleUnread(convCtxPhone);
+  closeConvMenu();
+}
+
+function ctxFavorite() {
+  // TODO: implementar favoritos (requer campo no Redis + UI na lista)
+  closeConvMenu();
+}
+
+function ctxArchive() {
+  // TODO: implementar arquivamento via /api/archive + remover da lista ativa
+  closeConvMenu();
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PDF MODAL                                                   ║
+// ╚══════════════════════════════════════════════════════════════╝
+function openPdfModal(base64) {
+  if (pdfBlobUrl) { URL.revokeObjectURL(pdfBlobUrl); pdfBlobUrl = null; }
+  pdfBlobUrl = base64ToBlobUrl(base64, "application/pdf");
+  if (!pdfBlobUrl) return;
+  document.getElementById("pdf-iframe").src = pdfBlobUrl;
+  document.getElementById("pdf-modal").classList.remove("hidden");
+}
+
+function closePdfModal() {
+  document.getElementById("pdf-modal").classList.add("hidden");
+  document.getElementById("pdf-iframe").src = "";
+  if (pdfBlobUrl) { URL.revokeObjectURL(pdfBlobUrl); pdfBlobUrl = null; }
+}
+
+function downloadPdfModal() {
+  if (!pdfBlobUrl) return;
+  const a    = document.createElement("a");
+  a.href     = pdfBlobUrl;
+  a.download = "documento.pdf";
+  a.click();
+}
+
+// Fechar PDF modal com ESC (adiciona ao listener já existente para media-modal)
+document.getElementById("pdf-modal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("pdf-modal")) closePdfModal();
+});
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  GERENCIADOR DE CATEGORIAS                                   ║
+// ╚══════════════════════════════════════════════════════════════╝
+function openCatManager() {
+  renderCatList();
+  document.getElementById("cat-modal").classList.remove("hidden");
+}
+
+function closeCatManager() {
+  document.getElementById("cat-modal").classList.add("hidden");
+}
+
+function renderCatList() {
+  const cats  = getCategories();
+  const inUse = new Set(allConvs.map(c => c.demandType).filter(Boolean));
+  const listEl = document.getElementById("cat-list");
+  listEl.innerHTML = "";
+
+  for (const [key, label] of Object.entries(cats)) {
+    const isDefault = Object.prototype.hasOwnProperty.call(DEFAULT_CATEGORIES, key);
+    const used      = inUse.has(key);
+    const item      = document.createElement("div");
+    item.className  = "cat-item";
+    item.innerHTML  = `
+      <span class="cat-item-name">${esc(label)}</span>
+      ${isDefault ? `<span class="cat-item-tag">padrão</span>` : ""}
+      <button class="btn-cat-del" onclick="removeCat('${esc(key)}')"
+        ${used ? `disabled title="Em uso em ${inUse.has(key) ? "cards ativos" : ""}"` : `title="Remover"`}>🗑️</button>
+    `;
+    listEl.appendChild(item);
+  }
+}
+
+function addCat() {
+  const input = document.getElementById("cat-new-input");
+  const raw   = input.value.trim();
+  if (!raw) return;
+
+  const key = raw.toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+  if (!key) return;
+
+  const cats = getCategories();
+  if (cats[key]) { alert(`Categoria "${cats[key]}" já existe.`); return; }
+  cats[key] = raw;
+  saveCategories(cats);
+  input.value = "";
+  renderCatList();
+  renderPipeline(allConvs);
+}
+
+function removeCat(key) {
+  const inUse = new Set(allConvs.map(c => c.demandType).filter(Boolean));
+  if (inUse.has(key)) { alert("Esta categoria está em uso em cards ativos."); return; }
+  const cats = getCategories();
+  delete cats[key];
+  saveCategories(cats);
+  renderCatList();
+  renderPipeline(allConvs);
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  DATA LIMITE TOGGLE                                          ║
+// ╚══════════════════════════════════════════════════════════════╝
+function onToggleDataLimite(prefix) {
+  const toggle = document.getElementById(`${prefix}-dataLimite-toggle`);
+  const row    = document.getElementById(`${prefix}-dataLimite-row`);
+  if (!toggle || !row) return;
+  row.style.display = toggle.checked ? "block" : "none";
+  if (!toggle.checked) {
+    const input = document.getElementById(`${prefix}-dataLimite`);
+    if (input) input.value = "";
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CONVERSAS — FILTRO PF/PJ/TODAS                              ║
+// ╚══════════════════════════════════════════════════════════════╝
+function setConvFilter(filter) {
+  convFilter = filter;
+  sessionStorage.setItem("sartec_conv_filter", filter);
+
+  ["all","pf","pj"].forEach(f => {
+    const pill = document.getElementById(`pill-${f}`);
+    if (!pill) return;
+    pill.className = `filter-pill${filter === f ? ` active-${f}` : ""}`;
+  });
+
+  renderConvsList(allConversationsList);
+}
+
+function applyPillActiveState() {
+  ["all","pf","pj"].forEach(f => {
+    const pill = document.getElementById(`pill-${f}`);
+    if (pill) pill.className = `filter-pill${convFilter === f ? ` active-${f}` : ""}`;
+  });
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CONVERSAS — PIN / NÃO LIDA                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+function togglePin(phone) {
+  const idx = pinnedConvs.indexOf(phone);
+  if (idx >= 0) pinnedConvs.splice(idx, 1);
+  else          pinnedConvs.unshift(phone);
+  localStorage.setItem("sartec_pinned_convs", JSON.stringify(pinnedConvs));
+  renderConvsList(allConversationsList);
+}
+
+function toggleUnread(phone) {
+  const idx = unreadConvs.indexOf(phone);
+  if (idx >= 0) unreadConvs.splice(idx, 1);
+  else          unreadConvs.unshift(phone);
+  localStorage.setItem("sartec_unread_convs", JSON.stringify(unreadConvs));
+  renderConvsList(allConversationsList);
+  updateConvsTabBadge();
+}
+
+function markAsRead(phone) {
+  const idx = unreadConvs.indexOf(phone);
+  if (idx >= 0) {
+    unreadConvs.splice(idx, 1);
+    localStorage.setItem("sartec_unread_convs", JSON.stringify(unreadConvs));
+    updateConvsTabBadge();
+  }
+}
+
+function updateConvsTabBadge() {
+  const count  = unreadConvs.length;
+  const tabBtn = document.getElementById("tab-convs");
+  let   badge  = tabBtn.querySelector(".convs-tab-badge");
+  if (count > 0) {
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "convs-tab-badge";
+      tabBtn.appendChild(badge);
+    }
+    badge.textContent = count;
+  } else {
+    badge?.remove();
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  INIT                                                        ║
+// ╚══════════════════════════════════════════════════════════════╝
+// Restaura aba ativa da sessão anterior
+switchTab(currentTab);
+loadQueue();
+startAutoRefresh();
+</script>
+</body>
+</html>
