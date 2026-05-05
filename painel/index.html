@@ -2169,7 +2169,7 @@
         <div style="display:flex;flex-direction:column;gap:7px" id="ncm-tmpl-options">
           <div class="tmpl-card" data-ncm-type="attendance_resume" onclick="selectNcmTemplate('attendance_resume')">
             <div class="tmpl-card-title">↩ Retomar atendimento</div>
-            <div class="tmpl-card-text">"Olá, [nome]. Recebemos sua solicitação sobre [assunto] e queremos continuar seu atendimento."</div>
+            <div class="tmpl-card-text">"Olá, [nome], aqui é da Sartec Papelaria. Recebemos sua solicitação anteriormente e gostaríamos de continuar seu atendimento."</div>
           </div>
           <div class="tmpl-card" data-ncm-type="budget_update" onclick="selectNcmTemplate('budget_update')">
             <div class="tmpl-card-title">📋 Orçamento</div>
@@ -2213,7 +2213,7 @@
     <div class="tmpl-options">
       <div class="tmpl-card" data-type="attendance_resume" onclick="selectTemplateType('attendance_resume')">
         <div class="tmpl-card-title">↩ Retomar atendimento</div>
-        <div class="tmpl-card-text">"Olá, [nome]. Recebemos sua solicitação sobre [assunto] e queremos continuar seu atendimento."</div>
+        <div class="tmpl-card-text">"Olá, [nome], aqui é da Sartec Papelaria. Recebemos sua solicitação anteriormente e gostaríamos de continuar seu atendimento."</div>
       </div>
       <div class="tmpl-card" data-type="budget_update" onclick="selectTemplateType('budget_update')">
         <div class="tmpl-card-title">📋 Orçamento</div>
@@ -4202,10 +4202,9 @@ let selectedTemplateType = null;
 const TEMPLATE_CONFIGS = {
   attendance_resume: {
     title:   "↩ Retomar atendimento",
-    text:    "Olá, {{1}}. Aqui é da Sartec Papelaria. Recebemos sua solicitação sobre {{2}} e queremos continuar seu atendimento. Pode responder esta mensagem para seguirmos por aqui?",
+    text:    "Olá, {{1}}, aqui é da Sartec Papelaria. Recebemos sua solicitação anteriormente e gostaríamos de continuar seu atendimento. Pode responder esta mensagem para continuarmos?",
     vars: [
-      { label: "Nome do cliente",          placeholder: "Ex: João Silva",             defaultKey: "clientName" },
-      { label: "Assunto do atendimento",   placeholder: "Ex: lista escolar, papel contact..." },
+      { label: "Nome do cliente", placeholder: "Ex: João Silva", defaultKey: "clientName" },
     ],
   },
   budget_update: {
@@ -4807,3 +4806,4 @@ startAutoRefresh();
 <div id="toast-container"></div>
 </body>
 </html>
+                                                
