@@ -103,27 +103,29 @@
        TAB BAR
     ══════════════════════════════════════════════════ */
     .tab-bar {
-      background: #fff;
-      border-bottom: 2px solid var(--border);
-      padding: 0 16px;
+      background: #f8f9fb;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
       display: flex;
-      gap: 2px;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
     }
     .tab-btn {
-      padding: 11px 22px;
+      padding: 13px 20px;
       border: none;
       background: none;
-      font-size: .86rem;
+      font-size: .84rem;
       font-weight: 600;
       color: var(--text-secondary);
       cursor: pointer;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      transition: color .15s, border-color .15s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      border-radius: 8px 8px 0 0;
+      transition: color .15s, border-color .15s, background .15s;
       white-space: nowrap;
     }
-    .tab-btn.active { color: var(--brand-navy); border-bottom-color: var(--brand-navy); }
-    .tab-btn:hover:not(.active) { color: var(--text-primary); }
+    .tab-btn.active { color: var(--brand-navy); border-bottom-color: var(--brand-navy); background: rgba(26,42,94,.04); }
+    .tab-btn:hover:not(.active) { color: var(--text-primary); background: rgba(0,0,0,.02); }
     .tab-btn .tab-badge {
       display: inline-flex;
       align-items: center;
@@ -152,20 +154,20 @@
     ══════════════════════════════════════════════════ */
     .pipeline-wrap {
       overflow-x: auto;
-      padding: 16px 20px 28px;
+      padding: 20px 24px 32px;
       max-width: 1900px;
       margin: 0 auto;
     }
     .pipeline {
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
     .pipe-col {
-      flex: 1 0 240px;
-      max-width: 300px;
+      flex: 1 0 260px;
+      max-width: 340px;
       display: flex;
       flex-direction: column;
-      border-radius: 14px;
+      border-radius: 16px;
       background: #f5f6fa;
       transition: background .15s, outline .15s;
     }
@@ -181,7 +183,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 10px 12px;
+      padding: 10px 12px 12px;
     }
     .pipe-col-dot {
       width: 10px; height: 10px;
@@ -213,7 +215,7 @@
       align-content: start;
       min-height: 60px;
       flex: 1;
-      padding-bottom: 8px;
+      padding: 0 8px 12px;
     }
     .card.dragging { opacity: .45; pointer-events: none; }
     .drag-line {
@@ -253,7 +255,7 @@
     .card {
       background: var(--bg-card);
       border-radius: 16px;
-      padding: 14px 16px 12px;
+      padding: 16px 18px 14px;
       border: 1px solid rgba(0,0,0,.05);
       box-shadow: 0 2px 8px rgba(15,23,42,.05), 0 8px 24px rgba(15,23,42,.06);
       transition: box-shadow .18s, transform .12s;
@@ -348,22 +350,23 @@
     }
     .btn-resolve-card:hover { background: #fff1f2; border-color: #f87171; }
 
-    /* Resolver inline — ghost button discreto */
+    /* Resolver inline — quase invisível por padrão */
     .btn-resolve-inline {
       margin-left: auto;
       font-size: .6rem;
       font-weight: 500;
       padding: 2px 7px;
       border-radius: 5px;
-      border: 1px solid rgba(0,0,0,.14);
+      border: 1px solid transparent;
       background: transparent;
       color: var(--text-muted);
+      opacity: .55;
       cursor: pointer;
-      transition: background .12s, color .12s;
+      transition: background .12s, color .12s, opacity .12s, border-color .12s;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .btn-resolve-inline:hover { background: #fff1f2; color: #b91c1c; border-color: #fca5a5; }
+    .btn-resolve-inline:hover { background: #fff1f2; color: #b91c1c; border-color: rgba(252,165,165,.5); opacity: 1; }
 
     /* -- Altura uniforme: botoes sempre no fundo -- */
     .card-actions { margin-top: auto; }
@@ -2060,12 +2063,34 @@
     .card-open-hint {
       font-size: .59rem;
       color: var(--brand-navy-mid);
-      opacity: .45;
+      opacity: .55;
       text-align: right;
       padding-top: 4px;
       pointer-events: none;
       letter-spacing: .02em;
     }
+
+    /* ── Stats strip — barra de métricas abaixo do header ── */
+    .stats-strip {
+      background: #f8f9fb;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      padding: 5px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .stat-chip {
+      font-size: .67rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .stat-chip.open   { color: #16a34a; }
+    .stat-chip.closed { color: var(--text-muted); }
+    .stat-sep { font-size: .6rem; color: var(--border); opacity: .8; }
   </style>
 </head>
 <body>
@@ -2085,6 +2110,15 @@
   <div class="refresh-info">Atualiza em <span id="countdown">30</span>s</div>
   <button class="btn-logout" onclick="logout()">Sair</button>
 </header>
+
+<!-- ══════ STATS STRIP ══════ -->
+<div class="stats-strip">
+  <span class="stat-chip" id="stat-ativas"></span>
+  <span class="stat-sep">·</span>
+  <span class="stat-chip open" id="stat-abertas"></span>
+  <span class="stat-sep">·</span>
+  <span class="stat-chip closed" id="stat-fechadas"></span>
+</div>
 
 <!-- ══════ TAB BAR ══════ -->
 <div class="tab-bar">
@@ -2771,6 +2805,17 @@ function updateHeader(convs) {
       critEl.style.display = "none";
     }
   }
+
+  // Stats strip — métricas discretas derivadas de allConvs
+  const ativas     = convs.filter(c => c.status !== "resolvido").length;
+  const wsAbertas  = convs.filter(c => c.status !== "resolvido" && c.conversationWindowStatus === "open").length;
+  const wsFechadas = convs.filter(c => c.status !== "resolvido" && c.conversationWindowStatus === "closed").length;
+  const ativEl = document.getElementById("stat-ativas");
+  const aberEl = document.getElementById("stat-abertas");
+  const fechEl = document.getElementById("stat-fechadas");
+  if (ativEl) ativEl.textContent = `${ativas} ativas`;
+  if (aberEl) aberEl.textContent = `⬡ ${wsAbertas} abertas`;
+  if (fechEl) fechEl.textContent = `✕ ${wsFechadas} fechadas`;
 
   // Badges nas abas
   const pfWaiting = convs.filter(c => (c.clientType||"pf") === "pf" && c.status === "aguardando_humano" && c.pipelineStatus === "novo").length;
