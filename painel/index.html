@@ -166,22 +166,11 @@
       display: flex;
       flex-direction: column;
       border-radius: 14px;
-      background: rgba(0,0,0,.018);
+      background: #f5f6fa;
       transition: background .15s, outline .15s;
     }
 
-    /* ── Cores pastel por coluna ── */
-    .pipe-col[data-col-key="novo"]              { background: #eef5ff; }
-    .pipe-col[data-col-key="em_atendimento"]    { background: #fffbf3; }
-    .pipe-col[data-col-key="orcamento_enviado"] { background: #f6f2ff; }
-    .pipe-col[data-col-key="confirmado"]        { background: #edfaf5; }
-    .pipe-col[data-col-key="finalizado"]        { background: #f2f4f7; }
-    .pipe-col[data-col-key="resolvido"]         { background: #f5f5f7; }
-    /* PJ */
-    .pipe-col[data-col-key="cadastro"]          { background: #fffbf3; }
-    .pipe-col[data-col-key="em_cotacao"]        { background: #f6f2ff; }
-    .pipe-col[data-col-key="proposta_enviada"]  { background: #eef5ff; }
-    .pipe-col[data-col-key="entregue"]          { background: #f2f4f7; }
+    /* Todas as colunas — fundo neutro uniforme; apenas a bolinha diferencia o status */
     .pipe-col.drag-over {
       background: #eef2ff;
       outline: 2px dashed var(--brand-navy-mid);
@@ -281,12 +270,16 @@
     }
     .card:hover { box-shadow: 0 4px 16px rgba(15,23,42,.09), 0 12px 32px rgba(15,23,42,.08); transform: translateY(-2px); }
 
-    .card.urgent   { background: #fff1f2; border-color: rgba(248,113,113,.18); }
-    .card.resolvido { opacity: .78; background: #f0fdf4; border-color: rgba(134,239,172,.3); }
+    /* ── Semântica: fundo do card = temperatura operacional ── */
+    .card.resolvido      { opacity: .76; background: #e3f8ec; border-color: rgba(52,211,153,.18); }
+    .card.card-finalizado { background: #e3f8ec; border-color: rgba(52,211,153,.18); }
+    .card.card-critica   { background: #ffe4e6; border-color: rgba(248,113,113,.15); }
+    .card.pri-alta       { background: #ffe4e6; border-color: rgba(248,113,113,.15); }
+    .card.urgent         { background: #ffe4e6; border-color: rgba(248,113,113,.15); }
+    .card.forgotten      { background: #ffe4e6; border-color: rgba(248,113,113,.15); }
+    .card.pri-media      { background: #fff4d0; border-color: rgba(234,179,8,.15); }
+    .card.warn-10        { background: #fff4d0; border-color: rgba(234,179,8,.15); }
     .card.triagem_incompleta { border-color: rgba(245,158,11,.2); }
-    .card.warn-10  { background: #fffbeb; border-color: rgba(251,191,36,.2); }
-    .card.pri-alta  { background: #fff8f1; border-color: rgba(234,88,12,.1); }
-    .card.pri-media { background: #fffef0; border-color: rgba(202,138,4,.1); }
 
     .priority-dot {
       display: inline-flex; align-items: center;
@@ -297,13 +290,12 @@
       border: none; transition: opacity .12s;
     }
     .priority-dot:hover { opacity: .75; }
-    .priority-dot.pb-critica { background: #fee2e2; color: #991b1b; }
-    .priority-dot.pb-alta    { background: #ffedd5; color: #9a3412; }
-    .priority-dot.pb-media   { background: #fef9c3; color: #854d0e; }
-    .priority-dot.pb-baixa   { background: #f1f5f9; color: #475569; opacity: .45; }
+    .priority-dot.pb-critica { background: rgba(239,68,68,.12);  color: #b91c1c; }
+    .priority-dot.pb-alta    { background: rgba(234,88,12,.1);   color: #c2410c; }
+    .priority-dot.pb-media   { background: rgba(202,138,4,.1);   color: #a16207; }
+    .priority-dot.pb-baixa   { background: transparent; color: var(--text-muted); opacity: .45; }
     .priority-dot.pri-manual { opacity: .8; }
 
-    .card.forgotten { background: #fff0f0; border-color: rgba(248,113,113,.2); }
     .forgotten-icon {
       font-size: .75rem;
       flex-shrink: 0;
@@ -313,11 +305,7 @@
     }
 
     /* ─ Card top ─ */
-    /* -- Prioridade crítica -- */
-    .card.card-critica { background: #fff1f1; border-color: rgba(239,68,68,.15); }
-
-    /* -- Finalizado/Entregue -- */
-    .card.card-finalizado { background: #f0fdf6; border-color: rgba(52,211,153,.2); }
+    /* card-critica e card-finalizado já definidos acima na seção de semântica */
 
     /* -- Select PF/PJ compacto no topo do card -- */
     .type-select-top {
@@ -2871,17 +2859,25 @@ function buildCard(c, col, cols) {
   const card = document.createElement("div");
   card.dataset.phone = c.phone;
   const priority = computePriority(c);
+
+  // Verde: resolvido ou pipeline em estado terminal
+  const isFinalizando = ["confirmado", "finalizado", "entregue"].includes(c.pipelineStatus);
+
   let cls = "card";
-  // Prioridade sempre define o fundo — coluna/timing não interferem
-  if (isResolved)                        cls += " resolvido";
-  else if (priority.level === "critica") cls += " card-critica";
-  else if (priority.level === "alta")    cls += " pri-alta";
-  else if (priority.level === "media")   cls += " pri-media";
+  if (isResolved)         cls += " resolvido";        // verde com opacidade
+  else if (isFinalizando) cls += " card-finalizado";  // verde pleno
+  else if (priority.level === "critica") cls += " card-critica"; // vermelho
+  else if (priority.level === "alta")    cls += " pri-alta";     // vermelho
+  else if (priority.level === "media")   cls += " pri-media";    // amarelo
+
   if (isIncomplete) cls += " triagem_incompleta";
-  // Timing como indicador adicional (só afeta border-left, sem sobrescrever fundo)
-  if (forgotten)    cls += " forgotten";
-  else if (urgent)  cls += " urgent";
-  else if (warn10)  cls += " warn-10";
+
+  // Timing só para cards fora do estado terminal
+  if (!isFinalizando) {
+    if (forgotten)    cls += " forgotten";  // vermelho
+    else if (urgent)  cls += " urgent";     // vermelho
+    else if (warn10)  cls += " warn-10";    // amarelo
+  }
   card.className = cls;
 
   const colsForStatus = cols.filter(col => !col.resolved);
