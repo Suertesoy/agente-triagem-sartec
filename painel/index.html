@@ -174,9 +174,9 @@
 
     /* Todas as colunas — fundo neutro uniforme; apenas a bolinha diferencia o status */
     .pipe-col.drag-over {
-      background: #eef2ff;
-      outline: 2px dashed var(--brand-navy-mid);
-      outline-offset: -3px;
+      background: rgba(26,42,94,.07);
+      outline: 2px dashed rgba(26,42,94,.3);
+      outline-offset: -4px;
     }
 
     .pipe-col-header {
@@ -217,7 +217,7 @@
       flex: 1;
       padding: 0 8px 12px;
     }
-    .card.dragging { opacity: .45; pointer-events: none; }
+    .card.dragging { opacity: .5; pointer-events: none; transform: rotate(1.5deg) scale(1.02); box-shadow: 0 12px 36px rgba(15,23,42,.22), 0 4px 12px rgba(15,23,42,.14); }
     .drag-line {
       height: 3px;
       background: var(--brand-navy);
@@ -225,6 +225,7 @@
       margin: 2px 0;
       pointer-events: none;
       grid-column: 1 / -1;
+      box-shadow: 0 0 8px rgba(26,42,94,.45);
     }
 
     /* Coluna resolvidos — visual mais discreto */
@@ -270,7 +271,7 @@
       animation: card-enter .22s ease;
       cursor: pointer;
     }
-    .card:hover { box-shadow: 0 2px 6px rgba(15,23,42,.06), 0 8px 22px rgba(15,23,42,.1), 0 18px 40px rgba(15,23,42,.08); transform: translateY(-2px); }
+    .card:hover { box-shadow: 0 2px 8px rgba(15,23,42,.07), 0 10px 28px rgba(15,23,42,.12), 0 20px 44px rgba(15,23,42,.09); transform: translateY(-3px); }
 
     /* ── Semântica: fundo do card = temperatura operacional ── */
     .card.resolvido      { opacity: .76; background: #e8f3ee; border-color: rgba(20,150,80,.14); }
@@ -285,7 +286,7 @@
 
     .priority-dot {
       display: inline-flex; align-items: center;
-      padding: 3px 9px; border-radius: 20px;
+      padding: 2px 7px; border-radius: 20px;
       font-size: .65rem; font-weight: 700;
       cursor: pointer; flex-shrink: 0;
       white-space: nowrap; user-select: none;
@@ -312,7 +313,7 @@
 
     /* -- Select PF/PJ compacto no topo do card -- */
     .type-select-top {
-      font-size: .55rem;
+      font-size: .52rem;
       font-weight: 800;
       padding: 2px 4px;
       border-radius: 5px;
@@ -392,8 +393,9 @@
 
     /* Nome editável inline */
     .card-name {
-      font-weight: 700;
-      font-size: .9rem;
+      font-weight: 500;
+      font-size: .82rem;
+      color: var(--text-secondary);
       flex: 1;
       min-width: 0;
       white-space: nowrap;
@@ -419,8 +421,8 @@
 
     /* ─ Card title editável — único resumo do pedido ─ */
     .card-title {
-      font-size: .92rem;
-      font-weight: 600;
+      font-size: .94rem;
+      font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 2px;
       cursor: text;
@@ -2042,7 +2044,7 @@
       padding: 0 10px;
       background: rgba(0,0,0,.025);
       border-radius: 8px;
-      transition: max-height .2s ease, opacity .18s ease, padding .2s ease, margin-top .2s ease;
+      transition: max-height .25s cubic-bezier(.4,0,.2,1), opacity .2s cubic-bezier(.4,0,.2,1), padding .25s cubic-bezier(.4,0,.2,1), margin-top .25s cubic-bezier(.4,0,.2,1);
     }
     .card-expand-body.visible {
       max-height: 600px;
@@ -2132,6 +2134,72 @@
     .stat-chip.open   { color: #86efac; }
     .stat-chip.closed { color: rgba(255,255,255,.38); }
     .stat-sep { font-size: .6rem; color: rgba(255,255,255,.2); }
+    /* ══════════════════════════════════════════════════
+       ONBOARDING TOUR
+    ══════════════════════════════════════════════════ */
+    /* Blur layer — visual only, não bloqueia cliques */
+    .ob-blur {
+      position: fixed; inset: 0; z-index: 9998;
+      backdrop-filter: blur(1.5px); pointer-events: none;
+    }
+    /* 4 strips escuras — bloqueiam cliques no fundo */
+    .ob-strip {
+      position: fixed; z-index: 9999;
+      background: rgba(15,23,42,.72);
+      pointer-events: auto;
+      transition: top .28s cubic-bezier(.4,0,.2,1),
+                  left .28s cubic-bezier(.4,0,.2,1),
+                  width .28s cubic-bezier(.4,0,.2,1),
+                  height .28s cubic-bezier(.4,0,.2,1);
+    }
+    /* Anel do spotlight — decorativo, não bloqueia cliques */
+    .ob-ring {
+      position: fixed; z-index: 10000;
+      pointer-events: none;
+      border-radius: 10px;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.35), 0 6px 24px rgba(0,0,0,.28);
+      transition: all .28s cubic-bezier(.4,0,.2,1);
+    }
+    /* Tooltip */
+    .ob-tooltip {
+      position: fixed; z-index: 10001;
+      width: 300px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px 20px 16px;
+      box-shadow: 0 20px 60px rgba(15,23,42,.22), 0 4px 16px rgba(15,23,42,.1);
+      pointer-events: auto;
+      transition: top .28s cubic-bezier(.4,0,.2,1), left .28s cubic-bezier(.4,0,.2,1);
+    }
+    .ob-badge {
+      display: inline-block; font-size: .6rem; font-weight: 700;
+      color: var(--text-muted); background: var(--bg-main);
+      padding: 2px 8px; border-radius: 20px; margin-bottom: 10px;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .ob-title { font-size: .95rem; font-weight: 800; color: var(--text-primary); margin: 0 0 8px; line-height: 1.3; }
+    .ob-text  { font-size: .79rem; color: var(--text-secondary); line-height: 1.55; margin: 0 0 18px; }
+    .ob-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .ob-skip { font-size: .67rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 0; text-decoration: underline; text-underline-offset: 2px; }
+    .ob-skip:hover { color: var(--text-secondary); }
+    .ob-nav { display: flex; gap: 7px; align-items: center; }
+    .ob-back { font-size: .74rem; font-weight: 600; color: var(--text-secondary); background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: background .15s; }
+    .ob-back:hover { background: var(--bg-sidebar); }
+    .ob-next { font-size: .74rem; font-weight: 700; color: #fff; background: var(--brand-navy); border: none; border-radius: 8px; padding: 6px 14px; cursor: pointer; transition: background .15s; }
+    .ob-next:hover { background: var(--brand-navy-mid); }
+    /* Esconde todos os elementos quando inativo */
+    #ob-wrap.ob-hidden .ob-blur,
+    #ob-wrap.ob-hidden .ob-strip,
+    #ob-wrap.ob-hidden .ob-ring,
+    #ob-wrap.ob-hidden .ob-tooltip { display: none !important; }
+    /* Botão tutorial no header */
+    .btn-tutorial {
+      background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.65);
+      width: 26px; height: 26px; border-radius: 50%; font-size: .78rem; font-weight: 700;
+      cursor: pointer; transition: background .15s, color .15s; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-tutorial:hover { background: rgba(255,255,255,.2); color: #fff; }
   </style>
 </head>
 <body>
@@ -2149,6 +2217,7 @@
   </div>
   <span id="header-critical" style="display:none;font-size:.72rem;background:rgba(204,34,34,.22);color:#ffb3b3;padding:2px 9px;border-radius:20px;font-weight:700;white-space:nowrap;flex-shrink:0"></span>
   <div class="refresh-info">Atualiza em <span id="countdown">30</span>s</div>
+  <button class="btn-tutorial" onclick="restartOnboarding()" title="Ver tutorial">?</button>
   <button class="btn-logout" onclick="logout()">Sair</button>
 </header>
 
@@ -2635,52 +2704,72 @@ function windowStatusLabel(c) {
 const _USELESS_MSG = /^(ok|oks|okay|obrigad\w*|obg|valeu|vlw|beleza|blz|tudo bem|td bem|tdbm|sim|não|nao|talvez|pode|certo|entendi|legal|\s|👍|✅|👌|😊|😁|🙏|⁠)+\.?$/iu;
 
 function resumoOperacional(c) {
-  // 1. cardTitle manual útil (> 5 chars e não é só espaços)
+  // 1. cardTitle manual útil
   const title = (c.cardTitle || "").trim();
   if (title.length > 5) return title;
 
-  // 2. Status terminal do pipeline
-  const ps = c.pipelineStatus || "";
-  if (ps === "confirmado")       return "Pedido confirmado";
-  if (ps === "finalizado")       return "Pedido finalizado";
-  if (ps === "entregue")         return "Pedido entregue";
-  if (c.status === "resolvido")  return "Atendimento encerrado";
+  const ps  = c.pipelineStatus || "";
+  const fe  = c.formaEntrega   || "";
+  const end = c.endereco;
+  const dt  = c.demandType     || "";
 
-  // 3. Janela WhatsApp
+  // 2. Pipeline terminal com contexto de entrega
+  if (ps === "confirmado") {
+    if (fe === "entrega" && end) return "Pedido confirmado — aguardando entrega";
+    if (fe === "retirada")       return "Pronto para retirada";
+    return "Pedido confirmado";
+  }
+  if (ps === "finalizado") return "Pedido finalizado";
+  if (ps === "entregue")   return "Pedido entregue";
+  if (c.status === "resolvido") return "Atendimento encerrado";
+
+  // 3. Pipeline de cotação
+  if (ps === "orcamento_enviado") return "Aguardando aprovação do orçamento";
+  if (ps === "em_cotacao")        return "Em cotação — resposta pendente";
+  if (ps === "proposta_enviada")  return "Proposta enviada — aguardando retorno";
+
+  // 4. Janela WhatsApp
   if (c.conversationWindowStatus === "waiting_template_reply")
     return "Aguardando resposta do cliente";
 
-  // 4. Pipeline de cotação
-  if (["orcamento_enviado","em_cotacao","proposta_enviada"].includes(ps))
-    return "Orçamento enviado — aguardando cliente";
+  // 5. Dados do pedido combinados
+  if (c.escola) {
+    if (fe === "entrega") return "Separar e entregar material escolar";
+    if (fe === "retirada") return "Separar material para retirada";
+    return "Separar material escolar";
+  }
+  if (fe === "entrega" && !end) return "Falta endereço de entrega";
+  if (fe === "entrega" && end)  return "Pedido com entrega confirmada";
+  if (fe === "retirada")        return "Aguardando retirada na loja";
 
-  // 5. Dados de pedido presentes
-  if (c.escola) return "Pedido de material escolar";
-  if (c.formaEntrega === "entrega" && !c.endereco) return "Falta endereço de entrega";
-  if (c.formaEntrega === "entrega" && c.endereco)  return "Confirmar endereço de entrega";
-
-  // 6. Palavras-chave na última mensagem (ignorar mensagens inúteis)
+  // 6. Palavras-chave na última mensagem
   let lm = (c.lastMessage || "").trim();
-  // Se não veio lastMessage, tenta extrair de history
   if (!lm && c.history) {
     const um = [...c.history].reverse().find(m => m.role === "user");
     if (um && typeof um.content === "string") lm = um.content.trim();
   }
   if (lm && !_USELESS_MSG.test(lm)) {
     const lc = lm.toLowerCase();
-    if (/pdf|foto|imagem|arquivo|lista\s*escolar|foto da lista/.test(lc)) return "Cliente enviou material";
-    if (/cancelar|cancela|desistir|não quero mais/.test(lc))             return "Cliente pediu cancelamento";
-    if (/entrega|entregar|endere[çc]/.test(lc))                          return "Confirmar entrega";
-    if (/quanto custa|pre[çc]o|valor|or[çc]amento|quantidad/.test(lc))  return "Cliente pediu orçamento";
+    if (/pdf|foto|imagem|arquivo|lista\s*escolar|foto da/.test(lc))       return "Cliente enviou documento";
+    if (/cancelar|cancela|desistir|não quero/.test(lc))                    return "Cliente quer cancelar";
+    if (/quando|prazo|urgente|precis.*hoje|amanhã/.test(lc))               return "Cliente perguntou sobre prazo";
+    if (/entrega|buscar|retirar|como.*receb/.test(lc))                     return "Confirmar forma de entrega";
+    if (/quanto custa|pre[çc]o|valor|or[çc]amento|quantidad/.test(lc))    return "Aguardando orçamento";
+    if (/confirmei|confirmo|pode.*separar|pode.*enviar|quero/.test(lc))   return "Cliente confirmou pedido";
   }
 
-  // 7. Fallback por categoria
-  const dt = c.demandType || "";
-  if (dt === "lista")       return "Material escolar";
-  if (dt === "cotacao_pj")  return "Cotação para empresa";
-  if (dt === "xerox")       return "Cópias / Impressão";
-  if (dt === "produto")     return "Consulta sobre produto";
-  if (dt === "duvida")      return "Dúvida do cliente";
+  // 7. demandType + pipeline
+  if (dt === "lista") {
+    if (ps === "novo" || ps === "em_atendimento") return "Conferir lista escolar";
+    return "Material escolar";
+  }
+  if (dt === "cotacao_pj") {
+    if (ps === "novo") return "Nova cotação PJ — verificar";
+    return "Cotação para empresa";
+  }
+  if (dt === "xerox")   return "Pedido de cópias/impressão";
+  if (dt === "produto") return "Consulta sobre produto";
+  if (dt === "duvida")  return "Dúvida do cliente";
 
   // 8. Fallback por status
   if (c.status === "triagem_incompleta") return "Solicitação incompleta";
@@ -2874,15 +2963,18 @@ function switchTab(tab) {
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  QUEUE / PIPELINE                                            ║
 // ╚══════════════════════════════════════════════════════════════╝
+let _obAutoStarted = false;
+
 async function loadQueue() {
   try {
     const res  = await fetch("/api/queue");
     const data = await res.json();
     allConvs   = data.conversations || [];
-    renderPipeline(allConvs);
+    if (!window.__onboardingActive) renderPipeline(allConvs);
     updateHeader(allConvs);
     updateDocTitle(allConvs);
     detectNewCards(allConvs);
+    if (!_obAutoStarted) { _obAutoStarted = true; if (!localStorage.getItem("sartec_ob_done")) setTimeout(obStart, 1200); }
   } catch (e) { console.error("[loadQueue]", e); }
 }
 
@@ -5189,9 +5281,152 @@ function updateConvsTabBadge() {
 // ╚══════════════════════════════════════════════════════════════╝
 // Restaura aba ativa da sessão anterior
 switchTab(currentTab);
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ONBOARDING TOUR                                             ║
+// ╚══════════════════════════════════════════════════════════════╝
+const OB_STEPS = [
+  { sel: ".top-header",        title: "Painel de atendimento",  text: "Acompanhe todos os atendimentos ativos. O contador mostra quem está aguardando e as métricas de janela WhatsApp." },
+  { sel: ".pipeline-wrap",     title: "Fluxo de atendimento",   text: "Cada coluna é uma etapa. Arraste os cards para avançar. A cor indica a urgência operacional." },
+  { sel: ".card",              title: "Card de cliente",        text: "Cada card é um cliente. Vermelho = atenção, amarelo = acompanhamento, verde = finalizando, branco = normal." },
+  { sel: ".priority-dot",      title: "Prioridade manual",      text: "Clique para definir urgência: Alta, Média, Baixa ou Concluindo. Sobrepõe a prioridade automática." },
+  { sel: ".card-open-hint",    title: "Abrir atendimento",      text: "Acesse o histórico completo, envie mensagens e use templates WhatsApp." },
+  { sel: ".card-expand-btn",   title: "Detalhes rápidos",       text: "Expanda para ver o resumo operacional e os dados do pedido sem sair do Kanban." },
+  { sel: ".btn-resolve-inline",title: "Resolver atendimento",   text: "Quando concluído, resolva para arquivar e liberar a fila de atendimento." },
+];
+
+let _obStep = 0;
+
+function _obClamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function obShow() {
+  window.__onboardingActive = true;
+  const w = document.getElementById("ob-wrap");
+  if (w) w.classList.remove("ob-hidden");
+}
+
+function obHide() {
+  window.__onboardingActive = false;
+  const w = document.getElementById("ob-wrap");
+  if (w) w.classList.add("ob-hidden");
+}
+
+function _obSet(id, styles) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  Object.assign(el.style, styles);
+}
+
+async function obShowStep(idx) {
+  const step = OB_STEPS[idx];
+  let el = step.sel ? document.querySelector(step.sel) : null;
+
+  if (el) {
+    const r0 = el.getBoundingClientRect();
+    if (r0.top < 0 || r0.bottom > window.innerHeight) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      await new Promise(r => setTimeout(r, 420));
+    }
+  }
+
+  const W = window.innerWidth, H = window.innerHeight, PAD = 10, TW = 300, GAP = 14;
+  const rect = el ? el.getBoundingClientRect() : null;
+
+  if (rect) {
+    const x = _obClamp(rect.left   - PAD, 0, W);
+    const y = _obClamp(rect.top    - PAD, 0, H);
+    const w = _obClamp(rect.width  + PAD*2, 0, W - x);
+    const h = _obClamp(rect.height + PAD*2, 0, H - y);
+    const px = x + "px", py = y + "px", pw = w + "px", ph = h + "px";
+    const pW = W + "px";
+
+    // 4 strips block background, spotlight area stays open
+    _obSet("ob-top",    { display:"block", top:"0",    left:"0", width:pW,  height:Math.max(0,y)+"px" });
+    _obSet("ob-bottom", { display:"block", top:(y+h)+"px", left:"0", width:pW, height:Math.max(0,H-y-h)+"px" });
+    _obSet("ob-left",   { display:"block", top:py, left:"0",   width:Math.max(0,x)+"px", height:ph });
+    _obSet("ob-right",  { display:"block", top:py, left:(x+w)+"px", width:Math.max(0,W-x-w)+"px", height:ph });
+    // Ring — pointer-events:none, purely decorative
+    _obSet("ob-ring",   { display:"block", top:py, left:px, width:pw, height:ph });
+
+    let ty = rect.bottom + GAP;
+    if (ty + 220 > H) ty = Math.max(GAP, rect.top - 220 - GAP);
+    const tx = _obClamp(rect.left, GAP, W - TW - GAP);
+    _obSet("ob-tooltip", { display:"block", top:ty+"px", left:tx+"px" });
+  } else {
+    ["ob-top","ob-bottom","ob-left","ob-right","ob-ring"].forEach(id => {
+      const e = document.getElementById(id); if (e) e.style.display = "none";
+    });
+    const ty = _obClamp((H-220)/2, 60, H-230);
+    const tx = _obClamp((W-TW)/2,  16, W-TW-16);
+    _obSet("ob-tooltip", { display:"block", top:ty+"px", left:tx+"px" });
+  }
+
+  document.getElementById("ob-title").textContent = step.title;
+  document.getElementById("ob-text").textContent  = step.text;
+  document.getElementById("ob-badge").textContent = (idx+1) + " / " + OB_STEPS.length;
+
+  const back = document.getElementById("ob-back");
+  const next = document.getElementById("ob-next");
+  if (back) back.style.display = idx === 0 ? "none" : "";
+  if (next) next.textContent   = idx === OB_STEPS.length-1 ? "Concluir →" : "Próximo →";
+}
+
+async function obStart() {
+  _obStep = 0;
+  obShow();
+  await obShowStep(0);
+}
+
+async function obNext() {
+  let nxt = _obStep + 1;
+  while (nxt < OB_STEPS.length && OB_STEPS[nxt].sel && !document.querySelector(OB_STEPS[nxt].sel)) nxt++;
+  if (nxt >= OB_STEPS.length) { obFinish(); return; }
+  _obStep = nxt;
+  await obShowStep(_obStep);
+}
+
+async function obBack() {
+  if (_obStep > 0) { _obStep--; await obShowStep(_obStep); }
+}
+
+function obFinish() {
+  obHide();
+  localStorage.setItem("sartec_ob_done", "1");
+  if (allConvs.length) renderPipeline(allConvs);
+}
+
+function obSkip() { obFinish(); }
+
+function restartOnboarding() {
+  localStorage.removeItem("sartec_ob_done");
+  obStart();
+}
+
 loadQueue();
 startAutoRefresh();
 </script>
 <div id="toast-container"></div>
+
+<!-- ══════ ONBOARDING TOUR ══════ -->
+<div id="ob-wrap" class="ob-hidden">
+  <div id="ob-blur"   class="ob-blur"></div>
+  <div id="ob-top"    class="ob-strip"></div>
+  <div id="ob-bottom" class="ob-strip"></div>
+  <div id="ob-left"   class="ob-strip"></div>
+  <div id="ob-right"  class="ob-strip"></div>
+  <div id="ob-ring"   class="ob-ring"></div>
+  <div id="ob-tooltip" class="ob-tooltip">
+    <div class="ob-badge" id="ob-badge">1 / 7</div>
+    <h3  id="ob-title" class="ob-title"></h3>
+    <p   id="ob-text"  class="ob-text"></p>
+    <div class="ob-footer">
+      <button class="ob-skip" onclick="obSkip()">Pular tutorial</button>
+      <div class="ob-nav">
+        <button id="ob-back" class="ob-back" onclick="obBack()">← Voltar</button>
+        <button id="ob-next" class="ob-next" onclick="obNext()">Próximo →</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
