@@ -6,7 +6,7 @@
 // templateType aceito: "attendance_resume" | "budget_update" | "pj_prospecting"
 //
 // Nomes dos templates na Meta são configuráveis por variável de ambiente:
-//   TEMPLATE_ATTENDANCE_RESUME_NAME  (padrão: "sartec_retomar_atendimento")
+//   TEMPLATE_ATTENDANCE_RESUME_NAME  (padrão: "retomar_atendimento_v1")
 //   TEMPLATE_BUDGET_UPDATE_NAME      (padrão: "sartec_orcamento")
 //   TEMPLATE_PJ_PROSPECTING_NAME     (padrão: "sartec_prospeccao_pj")
 //   TEMPLATE_LANGUAGE_CODE           (padrão: "pt_BR")
@@ -41,7 +41,7 @@ const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias — alinhado com ARCHIVE_TTL
 function getTemplateName(templateType) {
   const map = {
     attendance_resume: process.env.TEMPLATE_ATTENDANCE_RESUME_NAME
-      || "sartec_retomar_atendimento",
+      || "retomar_atendimento_v1",
     budget_update:     process.env.TEMPLATE_BUDGET_UPDATE_NAME
       || "sartec_orcamento",
     pj_prospecting:    process.env.TEMPLATE_PJ_PROSPECTING_NAME
