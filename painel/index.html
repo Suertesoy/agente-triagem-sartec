@@ -290,11 +290,12 @@
       border: none; transition: opacity .12s;
     }
     .priority-dot:hover { opacity: .75; }
-    .priority-dot.pb-critica { background: rgba(239,68,68,.12);  color: #b91c1c; }
-    .priority-dot.pb-alta    { background: rgba(234,88,12,.1);   color: #c2410c; }
-    .priority-dot.pb-media   { background: rgba(202,138,4,.1);   color: #a16207; }
-    .priority-dot.pb-baixa   { background: transparent; color: var(--text-muted); opacity: .45; }
-    .priority-dot.pri-manual { opacity: .8; }
+    .priority-dot.pb-critica    { background: rgba(239,68,68,.12);   color: #b91c1c; }
+    .priority-dot.pb-alta       { background: rgba(234,88,12,.1);    color: #c2410c; }
+    .priority-dot.pb-media      { background: rgba(202,138,4,.1);    color: #a16207; }
+    .priority-dot.pb-baixa      { background: transparent; color: var(--text-muted); opacity: .45; }
+    .priority-dot.pb-concluindo { background: rgba(52,211,153,.14);  color: #059669; }
+    .priority-dot.pri-manual    { opacity: .8; }
 
     .forgotten-icon {
       font-size: .75rem;
@@ -2343,6 +2344,7 @@
   <button class="pri-option" onclick="setPriorityManual('alta')">🟠 Alta</button>
   <button class="pri-option" onclick="setPriorityManual('media')">🟡 Média</button>
   <button class="pri-option" onclick="setPriorityManual('baixa')">⚪ Baixa</button>
+  <button class="pri-option" onclick="setPriorityManual('concluindo')">🟢 Concluindo</button>
   <div class="pri-divider"></div>
   <button class="pri-option pri-reset" onclick="setPriorityManual(null)">↺ Automático</button>
 </div>
@@ -2495,7 +2497,7 @@ function isUrgent(iso) {
 }
 
 // ── Sistema de prioridade ────────────────────────────────────────
-const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, baixa: 3 };
+const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, baixa: 3, concluindo: 4 };
 const IRRITATION_SIGNALS = [
   "absurdo","irritad","rid\u00edculo","ridiculo","vergonha","demora",
   "p\u00e9ssimo","pessimo","horr\u00edvel","horrivel","cancelar",
@@ -2505,9 +2507,10 @@ const IRRITATION_SIGNALS = [
 function computePriority(conv) {
   if (conv.priorityManual) {
     const MAP = {
-      alta:  { level: "alta",  label: "Alta",  cls: "pb-alta" },
-      media: { level: "media", label: "Média", cls: "pb-media" },
-      baixa: { level: "baixa", label: "Baixa", cls: "" },
+      alta:       { level: "alta",       label: "Alta",       cls: "pb-alta" },
+      media:      { level: "media",      label: "Média",      cls: "pb-media" },
+      baixa:      { level: "baixa",      label: "Baixa",      cls: "" },
+      concluindo: { level: "concluindo", label: "Concluindo", cls: "pb-concluindo" },
     };
     return MAP[conv.priorityManual] ?? { level: "baixa", label: "Baixa", cls: "" };
   }
@@ -2861,22 +2864,30 @@ function buildCard(c, col, cols) {
   const priority = computePriority(c);
 
   // Verde: resolvido ou pipeline em estado terminal
-  const isFinalizando = ["confirmado", "finalizado", "entregue"].includes(c.pipelineStatus);
+  const isFinalizando    = ["confirmado", "finalizado", "entregue"].includes(c.pipelineStatus);
+  const hasManualPriority = !!c.priorityManual;
 
   let cls = "card";
-  if (isResolved)         cls += " resolvido";        // verde com opacidade
-  else if (isFinalizando) cls += " card-finalizado";  // verde pleno
-  else if (priority.level === "critica") cls += " card-critica"; // vermelho
-  else if (priority.level === "alta")    cls += " pri-alta";     // vermelho
-  else if (priority.level === "media")   cls += " pri-media";    // amarelo
+  if (isResolved) {
+    cls += " resolvido";
+  } else if (isFinalizando || c.priorityManual === "concluindo") {
+    cls += " card-finalizado";  // verde: pipeline terminal OU manual "concluindo"
+  } else if (priority.level === "critica") {
+    cls += " card-critica";
+  } else if (priority.level === "alta") {
+    cls += " pri-alta";
+  } else if (priority.level === "media") {
+    cls += " pri-media";
+  }
+  // "baixa" manual não adiciona classe → card branco
 
   if (isIncomplete) cls += " triagem_incompleta";
 
-  // Timing só para cards fora do estado terminal
-  if (!isFinalizando) {
-    if (forgotten)    cls += " forgotten";  // vermelho
-    else if (urgent)  cls += " urgent";     // vermelho
-    else if (warn10)  cls += " warn-10";    // amarelo
+  // Timing classes só quando NÃO há override manual e NÃO é estado terminal
+  if (!hasManualPriority && !isFinalizando) {
+    if (forgotten)    cls += " forgotten";
+    else if (urgent)  cls += " urgent";
+    else if (warn10)  cls += " warn-10";
   }
   card.className = cls;
 
@@ -4188,14 +4199,18 @@ async function setPriorityManual(level) {
   const phone = _priPickerPhone;
   closePriorityPicker();
   if (!phone) return;
+
+  // Atualização visual otimista — imediata, antes do fetch
+  const conv = allConvs.find(c => c.phone === phone);
+  if (conv) { conv.priorityManual = level; renderPipeline(allConvs); }
+
+  // Persiste no servidor
   try {
     await fetch("/api/update-card", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, priorityManual: level }),
     });
-    const conv = allConvs.find(c => c.phone === phone);
-    if (conv) { conv.priorityManual = level; renderPipeline(allConvs); }
     showToast(level ? "Prioridade atualizada" : "Prioridade resetada para automático");
   } catch { showToast("Erro ao salvar prioridade", "t-err"); }
 }
