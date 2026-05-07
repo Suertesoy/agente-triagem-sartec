@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sartec Papelaria — Painel</title>
+  <link rel="manifest" href="/painel/manifest.json">
+  <meta name="theme-color" content="#1a2a5e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sartec CRM">
   <style>
     /* ══════════════════════════════════════════════════
        RESET + VARIÁVEIS
@@ -2200,6 +2206,45 @@
       display: flex; align-items: center; justify-content: center;
     }
     .btn-tutorial:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+    .mob-nav { display: none; }
+    .mob-back-btn { display: none; }
+    .mob-only { display: none; }
+    .mob-stage-chips { display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none; }
+    .mob-stage-chips::-webkit-scrollbar { display:none; }
+    .mob-chip { flex-shrink:0;font-size:.72rem;font-weight:600;padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--text-secondary);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s; }
+    .mob-chip.active { background:var(--brand-navy);color:#fff;border-color:var(--brand-navy); }
+    .mob-chip .tab-badge { display:inline-flex;align-items:center;justify-content:center;background:var(--brand-red);color:#fff;font-size:.55rem;font-weight:700;min-width:14px;height:14px;padding:0 3px;border-radius:7px;margin-left:4px;vertical-align:middle; }
+    .mob-chip .tab-badge:empty { display:none; }
+    #mob-stage-cards-pf, #mob-stage-cards-pj { flex:1;overflow-y:auto;padding:10px 10px 16px;display:flex;flex-direction:column;gap:10px; }
+    @media (max-width: 768px) {
+      .top-header { height:52px;padding:0 14px;gap:10px; }
+      .brand-name { font-size:.85rem; }
+      .brand-sub, .refresh-info { display:none; }
+      .waiting-counter { font-size:.7rem; }
+      .btn-logout { padding:4px 10px;font-size:.7rem; }
+      .stats-strip, .tab-bar { display:none; }
+      .view.active { display:flex;flex-direction:column; }
+      #view-pf.active, #view-pj.active { height:calc(100dvh - 52px - 56px);overflow:hidden; }
+      #view-convs.active { height:calc(100dvh - 52px - 56px);display:block;overflow:hidden; }
+      .pipeline-wrap { padding:8px 8px 16px; }
+      .pipeline-wrap.mob-hidden { display:none; }
+      .mob-only { display:flex;flex-direction:column;flex:1;overflow:hidden; }
+      .convs-sidebar { width:100%;height:100%;border-right:none; }
+      .convs-main { display:none;width:100%;height:100%;flex-direction:column; }
+      #view-convs.mob-chat-open .convs-sidebar { display:none; }
+      #view-convs.mob-chat-open .convs-main { display:flex; }
+      .mob-back-btn { display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 10px;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap; }
+      .mob-back-btn:active { background:rgba(255,255,255,.28); }
+      .modal-overlay { padding:0;align-items:flex-end; }
+      .modal-box { width:100%;height:96dvh;max-width:100%;max-height:96dvh;border-radius:16px 16px 0 0; }
+      .card { min-height:155px;padding:13px 15px 11px; }
+      #ob-wrap { display:none !important; }
+      .mob-nav { display:flex;position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--brand-navy);border-top:1px solid rgba(255,255,255,.12);height:56px;align-items:stretch; }
+      .mob-nav-btn { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:rgba(255,255,255,.55);cursor:pointer;font-size:.6rem;font-weight:600;padding:0;transition:color .15s,background .15s;-webkit-tap-highlight-color:transparent; }
+      .mob-nav-icon { font-size:1.1rem;line-height:1; }
+      .mob-nav-btn.active { color:#fff;background:rgba(255,255,255,.09); }
+    }
   </style>
 </head>
 <body>
@@ -2634,7 +2679,7 @@ const STATUS_LABEL_PJ = {
 // ║  ESTADO — apenas sessionStorage para UI efêmero             ║
 // ╚══════════════════════════════════════════════════════════════╝
 let allConvs        = [];
-let currentTab      = sessionStorage.getItem("activeTab") || "pf";
+let currentTab      = sessionStorage.getItem("activeTab") || (window.innerWidth <= 768 ? "convs" : "pf");
 let openModalPhone  = null;   // conversa aberta no modal do pipeline
 let openConvsPhone    = null;   // conversa aberta na aba Conversas
 let openConvsRedisKey = null;   // chave Redis da conversa aberta (para buscar archives corretamente)
@@ -2958,6 +3003,10 @@ function switchTab(tab) {
   } else {
     stopConvsPoll();
   }
+  if (window.innerWidth <= 768) {
+    const isKanban=(tab==="pf"||tab==="pj");
+    document.querySelectorAll(".mob-nav-btn").forEach(b=>{const t=b.dataset.tab;b.classList.toggle("active",t===tab||(t==="kanban"&&isKanban));});
+  }
 }
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -2970,7 +3019,10 @@ async function loadQueue() {
     const res  = await fetch("/api/queue");
     const data = await res.json();
     allConvs   = data.conversations || [];
-    if (!window.__onboardingActive) renderPipeline(allConvs);
+    if (!window.__onboardingActive) {
+      renderPipeline(allConvs);
+      if (window.innerWidth <= 768) { renderMobStageCards("pf",_mobActiveStage.pf||"novo"); renderMobStageCards("pj",_mobActiveStage.pj||"novo"); }
+    }
     updateHeader(allConvs);
     updateDocTitle(allConvs);
     detectNewCards(allConvs);
@@ -3717,6 +3769,8 @@ async function openConvsChat(phone, redisKey, isArchive) {
     el.classList.toggle("unread-item", el.dataset.convKey !== openConvsRedisKey && unreadConvs.includes(el.dataset.phone));
   });
 
+  if (window.innerWidth <= 768) document.getElementById("view-convs").classList.add("mob-chat-open");
+
   // Monta área de chat se não existir
   const main = document.getElementById("convs-main");
   main.innerHTML = "";
@@ -3727,6 +3781,7 @@ async function openConvsChat(phone, redisKey, isArchive) {
 
   chatArea.innerHTML = `
     <div style="background:var(--brand-navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <button class="mob-back-btn" onclick="closeMobChat()">&#8592; Voltar</button>
       <div style="flex:1;min-width:0">
         <div id="convs-chat-name" style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Carregando...</div>
         <div id="convs-chat-sub" style="font-size:.7rem;opacity:.75;display:flex;gap:8px;margin-top:2px"></div>
@@ -5276,11 +5331,98 @@ function updateConvsTabBadge() {
   }
 }
 
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MOBILE — kanban filtrado + closeMobChat                     ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const MOB_STAGES = {
+  pf: [{key:"novo",label:"Novo"},{key:"em_atendimento",label:"Atendimento"},{key:"orcamento_enviado",label:"Orçamento"},{key:"confirmado",label:"Confirmado"},{key:"finalizado",label:"Finalizado"},{key:"resolvido",label:"Resolvidos"}],
+  pj: [{key:"novo",label:"Novo"},{key:"cadastro",label:"Cadastro"},{key:"em_cotacao",label:"Cotação"},{key:"proposta_enviada",label:"Proposta"},{key:"confirmado",label:"Confirmado"},{key:"entregue",label:"Entregue"},{key:"resolvido",label:"Resolvidos"}],
+};
+let _mobActiveStage = { pf: "novo", pj: "novo" };
+
+function initMobileKanban() {
+  if (window.innerWidth > 768) return;
+  ["pf","pj"].forEach(function(tab) {
+    const view = document.getElementById("view-" + tab);
+    if (!view) return;
+    const wrap = view.querySelector(".pipeline-wrap");
+    if (wrap) wrap.classList.add("mob-hidden");
+    if (document.getElementById("mob-filter-" + tab)) return;
+    const stages = MOB_STAGES[tab];
+    const filterEl = document.createElement("div");
+    filterEl.className = "mob-only";
+    filterEl.id = "mob-filter-" + tab;
+    let chips = '<div class="mob-stage-chips" id="mob-chips-' + tab + '">';
+    stages.forEach(function(s, i) {
+      chips += '<button class="mob-chip' + (i===0?" active":"") + '" data-stage="' + s.key + '" onclick="selectMobStage('' + tab + '','' + s.key + '',this)">' + s.label + '</button>';
+    });
+    chips += '</div>';
+    filterEl.innerHTML = chips + '<div id="mob-stage-cards-' + tab + '"></div>';
+    view.insertBefore(filterEl, wrap || view.firstChild);
+  });
+}
+
+function mobSwitchKanban() {
+  switchTab(currentTab === "pj" ? "pj" : "pf");
+}
+
+function selectMobStage(tabId, stage, btn) {
+  document.querySelectorAll("#mob-chips-" + tabId + " .mob-chip").forEach(function(b){ b.classList.toggle("active", b === btn); });
+  _mobActiveStage[tabId] = stage;
+  renderMobStageCards(tabId, stage);
+}
+
+function renderMobStageCards(tabId, stage) {
+  const container = document.getElementById("mob-stage-cards-" + tabId);
+  if (!container) return;
+  const cols = tabId === "pj" ? PJ_COLS : PF_COLS;
+  const col  = cols.find(function(co){ return co.key === stage; }) || cols[0];
+  const cards = allConvs.filter(function(cv) {
+    const ct = cv.clientType || "pf";
+    if (tabId === "pf" && ct !== "pf") return false;
+    if (tabId === "pj" && ct !== "pj") return false;
+    if (stage === "resolvido") return cv.status === "resolvido";
+    return (cv.pipelineStatus || "novo") === stage && cv.status !== "resolvido";
+  });
+  // Update badge counts on chips
+  MOB_STAGES[tabId].forEach(function(s) {
+    const chip = document.querySelector("#mob-chips-" + tabId + " [data-stage='" + s.key + "']");
+    if (!chip) return;
+    const cnt = allConvs.filter(function(cv) {
+      const ct = cv.clientType || "pf";
+      if (tabId === "pf" && ct !== "pf") return false;
+      if (tabId === "pj" && ct !== "pj") return false;
+      if (s.key === "resolvido") return cv.status === "resolvido";
+      return (cv.pipelineStatus || "novo") === s.key && cv.status !== "resolvido";
+    }).length;
+    let badge = chip.querySelector(".tab-badge");
+    if (cnt > 0) {
+      if (!badge) { badge = document.createElement("span"); badge.className = "tab-badge"; chip.appendChild(badge); }
+      badge.textContent = cnt;
+    } else if (badge) badge.remove();
+  });
+  container.innerHTML = "";
+  if (!cards.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:32px 16px;font-size:.8rem;opacity:.7">Nenhuma conversa nesta etapa</div>';
+    return;
+  }
+  cards
+    .sort(function(a,b){ return (PRIORITY_ORDER[computePriority(a).level]||3)-(PRIORITY_ORDER[computePriority(b).level]||3); })
+    .forEach(function(cv){ container.appendChild(buildCard(cv, col, cols)); });
+}
+
+function closeMobChat() {
+  document.getElementById("view-convs").classList.remove("mob-chat-open");
+}
+
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  INIT                                                        ║
 // ╚══════════════════════════════════════════════════════════════╝
 // Restaura aba ativa da sessão anterior
 switchTab(currentTab);
+if (window.innerWidth <= 768) { initMobileKanban(); }
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  ONBOARDING TOUR                                             ║
@@ -5428,5 +5570,12 @@ startAutoRefresh();
     </div>
   </div>
 </div>
+
+<!-- ══════ MOBILE BOTTOM NAVIGATION ══════ -->
+<nav class="mob-nav" id="mob-nav">
+  <button class="mob-nav-btn active" data-tab="convs" id="mob-btn-convs" onclick="switchTab('convs')"><span class="mob-nav-icon">💬</span><span>Conversas</span></button>
+  <button class="mob-nav-btn" data-tab="kanban" id="mob-btn-kanban" onclick="mobSwitchKanban()"><span class="mob-nav-icon">📋</span><span>Kanban</span></button>
+  <button class="mob-nav-btn" data-tab="nova" id="mob-btn-nova" onclick="openNewConvoModal()"><span class="mob-nav-icon">✏️</span><span>Nova</span></button>
+</nav>
 </body>
 </html>
