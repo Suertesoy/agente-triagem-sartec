@@ -103,9 +103,11 @@ export default async function handler(req, res) {
       }
 
       const item = {
-        role:        m.role,
-        content:     content || "",
-        sentByHuman: m.sentByHuman || false,
+        role:          m.role,
+        content:       content || "",
+        sentByHuman:   m.sentByHuman   || false,
+        attendantId:   m.attendantId   || null,
+        attendantName: m.attendantName || null,
       };
 
       if (mediaType) {
@@ -139,6 +141,9 @@ export default async function handler(req, res) {
       serie:          session.serie          || "",
       // Janela de 24h
       ...windowInfo,
+      // Atendente ativo
+      activeAttendant:   session.activeAttendant   || null,
+      activeAttendantAt: session.activeAttendantAt || null,
       history,
     });
   } catch (err) {

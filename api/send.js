@@ -106,7 +106,9 @@ async function sendText(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
   await saveToHistory(to, {
     role: "assistant",
     content: message,
-    sentByHuman: true,
+    sentByHuman:   true,
+    attendantId:   body.attendantId   || null,
+    attendantName: body.attendantName || null,
   });
 
   return res.status(200).json({ success: true });
@@ -188,10 +190,12 @@ async function sendImage(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
   await saveToHistory(to, {
     role: "assistant",
     content: caption || "",
-    sentByHuman: true,
-    mediaType: "image",
-    mediaData: mediaBase64,
+    sentByHuman:   true,
+    mediaType:     "image",
+    mediaData:     mediaBase64,
     mediaMimeType: mimeType,
+    attendantId:   body.attendantId   || null,
+    attendantName: body.attendantName || null,
   });
 
   return res.status(200).json({ success: true });
@@ -271,13 +275,15 @@ async function sendDocument(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
 
   // 3. Salva no histórico com base64 para exibição no painel
   await saveToHistory(to, {
-    role:         "assistant",
-    content:      caption || "",
-    sentByHuman:  true,
-    mediaType:    "document",
-    mediaData:    mediaBase64,
+    role:          "assistant",
+    content:       caption || "",
+    sentByHuman:   true,
+    mediaType:     "document",
+    mediaData:     mediaBase64,
     mediaMimeType: mimeType,
     mediaFilename: filename,
+    attendantId:   body.attendantId   || null,
+    attendantName: body.attendantName || null,
   });
 
   return res.status(200).json({ success: true });

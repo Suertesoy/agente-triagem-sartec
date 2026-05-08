@@ -107,6 +107,127 @@
     }
     .btn-logout:hover { background: rgba(255,255,255,.22); }
 
+    /* ── Perfil do atendente ── */
+    .attendant-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.11);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px;
+      padding: 4px 10px 4px 5px;
+      cursor: pointer; color: #fff; font-size: .78rem;
+      white-space: nowrap; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .attendant-chip:hover { background: rgba(255,255,255,.2); }
+    .attendant-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #3b82f6; color: #fff;
+      font-size: .6rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .attendant-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+    .attendant-picker-box {
+      background: #fff; border-radius: 14px;
+      padding: 28px 24px 24px;
+      width: 380px; max-width: calc(100vw - 32px);
+      box-shadow: 0 16px 48px rgba(15,23,42,.18);
+      position: relative;
+    }
+    .attendant-picker-title {
+      font-size: .95rem; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 20px; text-align: center;
+    }
+    .attendant-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .attendant-picker-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: #fff;
+      cursor: pointer; font-size: .82rem; font-weight: 600;
+      color: var(--text-primary); transition: background .12s, border-color .12s;
+    }
+    .attendant-picker-item:hover { background: #f5f7ff; border-color: var(--brand-navy); }
+    .attendant-picker-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .attendant-picker-close {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; font-size: 1rem;
+      cursor: pointer; color: var(--text-muted);
+      padding: 4px 8px; border-radius: 6px;
+    }
+    .attendant-picker-close:hover { background: var(--bg-main); }
+    .btn-introduce {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: .68rem;
+      padding: 5px 9px; border-radius: 7px; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-introduce:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
+    .att-initial {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 17px; height: 17px; border-radius: 50%;
+      color: #fff; font-size: .56rem; font-weight: 700;
+      flex-shrink: 0; margin-right: 3px; vertical-align: middle;
+    }
+
+    /* ── Busca de contatos ── */
+    .header-search-wrap {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      z-index: 10;
+    }
+    .header-search-input {
+      width: 100%;
+      background: rgba(255,255,255,.11);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: .8rem;
+      color: #fff;
+      outline: none;
+      transition: background .15s, border-color .15s;
+    }
+    .header-search-input::placeholder { color: rgba(255,255,255,.4); }
+    .header-search-input:focus {
+      background: rgba(255,255,255,.18);
+      border-color: rgba(255,255,255,.38);
+    }
+    .contact-results {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(15,23,42,.16), 0 2px 8px rgba(15,23,42,.08);
+      max-height: 360px;
+      overflow-y: auto;
+      z-index: 500;
+    }
+    .contact-result-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    .contact-result-item:last-child { border-bottom: none; }
+    .contact-result-item:hover { background: #f5f7ff; }
+    .cri-name { font-size: .82rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+    .cri-meta { font-size: .72rem; color: var(--text-secondary); }
+    .cri-badge { font-size: .6rem; font-weight: 700; padding: 1px 6px; border-radius: 20px; text-transform: uppercase; }
+    .cri-badge.pf { background: #e0f2fe; color: #0369a1; }
+    .cri-badge.pj { background: #ede9fe; color: #6d28d9; }
+    .contact-results-empty { padding: 20px 14px; text-align: center; font-size: .78rem; color: var(--text-muted); }
+
     /* ══════════════════════════════════════════════════
        TAB BAR
     ══════════════════════════════════════════════════ */
@@ -908,6 +1029,20 @@
     .ws-label  { font-weight: 700; }
     .ws-detail { font-size: .7rem; font-weight: 400; opacity: .8; }
 
+    .active-attendant-bar {
+      padding: 5px 14px;
+      font-size: .72rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      border-bottom: 1px solid transparent;
+    }
+    .active-attendant-bar.hidden { display: none; }
+    .active-attendant-bar.aa-self  { background: #eff6ff; border-bottom-color: #bfdbfe; color: #1d4ed8; }
+    .active-attendant-bar.aa-other { background: #fffbeb; border-bottom-color: #fde68a; color: #92400e; }
+
     .dupe-tab-warning {
       background: #fef3c7;
       border-bottom: 2px solid #f59e0b;
@@ -1159,6 +1294,22 @@
       transition: border-color .15s, color .15s;
     }
     .btn-attach:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
+
+    .btn-camera {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: none; /* somente mobile */
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-camera:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
 
     .composer-row textarea {
       flex: 1;
@@ -2259,9 +2410,12 @@
     @media (max-width: 768px) {
       .top-header { height:52px;padding:0 14px;gap:10px; }
       .brand-name { font-size:.85rem; }
-      .brand-sub, .refresh-info { display:none; }
+      .brand-sub, .refresh-info, .header-search-wrap { display:none; }
       .waiting-counter { font-size:.7rem; }
       .btn-logout { padding:4px 10px;font-size:.7rem; }
+      .attendant-name { display:none; }
+      .attendant-chip { padding:4px 5px; }
+      .btn-camera { display:flex; }
       .stats-strip, .tab-bar { display:none; }
       .view.active { display:flex;flex-direction:column; }
       #view-pf.active, #view-pj.active { height:calc(100dvh - 52px - 56px);overflow:hidden; }
@@ -2300,7 +2454,17 @@
     <span id="waiting-count">Carregando...</span>
   </div>
   <span id="header-critical" style="display:none;font-size:.72rem;background:rgba(204,34,34,.22);color:#ffb3b3;padding:2px 9px;border-radius:20px;font-weight:700;white-space:nowrap;flex-shrink:0"></span>
+  <div class="header-search-wrap" id="header-search-wrap">
+    <input type="text" class="header-search-input" id="header-search-input"
+      placeholder="Buscar contato, telefone ou empresa…"
+      autocomplete="off" spellcheck="false">
+    <div class="contact-results" id="contact-results" style="display:none"></div>
+  </div>
   <div class="refresh-info">Atualiza em <span id="countdown">30</span>s</div>
+  <button class="attendant-chip" id="attendant-chip" onclick="openAttendantPicker()" title="Trocar perfil">
+    <span class="attendant-avatar" id="attendant-avatar">?</span>
+    <span class="attendant-name" id="attendant-name">Perfil</span>
+  </button>
   <button class="btn-tutorial" onclick="restartOnboarding()" title="Ver tutorial">?</button>
   <button class="btn-logout" onclick="logout()">Sair</button>
 </header>
@@ -2387,6 +2551,7 @@
 
     <!-- Barra de janela de 24h -->
     <div class="window-status-bar ws-unknown" id="modal-window-bar"></div>
+    <div class="active-attendant-bar hidden" id="modal-aa-bar"></div>
     <div class="dupe-tab-warning hidden" id="modal-dupe-warning">
       ⚠️ Esta conversa está aberta em outra aba. Evite editar ao mesmo tempo para não perder informações.
     </div>
@@ -2451,8 +2616,11 @@
       <div class="composer-row">
         <button class="btn-attach" onclick="document.getElementById('modal-file-input').click()" title="Imagem">📎</button>
         <input type="file" id="modal-file-input" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" style="display:none" onchange="handleImageSelect(event,'modal')">
+        <input type="file" id="modal-camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelect(event,'modal')">
+        <button class="btn-camera" onclick="document.getElementById('modal-camera-input').click()" title="Câmera">📷</button>
         <textarea id="modal-msg-input" placeholder="Digite sua mensagem..." rows="1"
           onkeydown="handleEnter(event,'modal')" oninput="autoResize(this)"></textarea>
+        <button class="btn-introduce" onclick="introduceAttendant('modal')" title="Me apresentar">Me apresentar</button>
         <button class="btn-send" id="modal-send-btn" onclick="sendMessage('modal')">Enviar</button>
       </div>
     </div>
@@ -3633,6 +3801,13 @@ async function openChat(phone) {
   document.getElementById("chat-modal").classList.remove("hidden");
   document.body.style.overflow = "hidden";
 
+  touchActiveAttendant(phone);
+  clearInterval(_aaIntervalId);
+  _aaIntervalId = setInterval(() => {
+    if (openModalPhone === phone) touchActiveAttendant(phone);
+    else clearInterval(_aaIntervalId);
+  }, 60000);
+
   await refreshModal();
 }
 
@@ -3690,6 +3865,7 @@ function renderModal(data) {
 
   // Janela de 24h
   updateWindowUI("modal", data);
+  renderActiveAttendantNotice("modal", data);
 
   populateDadosForm("modal", data);
 
@@ -3732,6 +3908,8 @@ function renderModal(data) {
 }
 
 function closeModal() {
+  clearInterval(_aaIntervalId);
+  _aaIntervalId = null;
   unlockConvTab(openModalPhone);
   openModalPhone = null;
   document.getElementById("chat-modal").classList.add("hidden");
@@ -3893,6 +4071,7 @@ async function openConvsChat(phone, redisKey, isArchive) {
     </div>
     <!-- Barra de janela de 24h -->
     <div class="window-status-bar ws-unknown" id="convs-window-bar"></div>
+    <div class="active-attendant-bar hidden" id="convs-aa-bar"></div>
     <div class="dupe-tab-warning hidden" id="convs-dupe-warning">
       ⚠️ Esta conversa está aberta em outra aba. Evite editar ao mesmo tempo para não perder informações.
     </div>
@@ -3907,8 +4086,11 @@ async function openConvsChat(phone, redisKey, isArchive) {
       <div class="composer-row">
         <button class="btn-attach" onclick="document.getElementById('convs-file-input').click()" title="Imagem">📎</button>
         <input type="file" id="convs-file-input" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" style="display:none" onchange="handleImageSelect(event,'convs')">
+        <input type="file" id="convs-camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelect(event,'convs')">
+        <button class="btn-camera" onclick="document.getElementById('convs-camera-input').click()" title="Câmera">📷</button>
         <textarea id="convs-msg-input" placeholder="Digite sua mensagem..." rows="1"
           onkeydown="handleEnter(event,'convs')" oninput="autoResize(this)"></textarea>
+        <button class="btn-introduce" onclick="introduceAttendant('convs')" title="Me apresentar">Me apresentar</button>
         <button class="btn-send" id="convs-send-btn" onclick="sendMessage('convs')">Enviar</button>
       </div>
     </div>` : `<div style="padding:10px 16px;text-align:center;font-size:.75rem;color:#888;background:#f5f5f5;border-top:1px solid #e5e5e5;flex-shrink:0">
@@ -3920,6 +4102,8 @@ async function openConvsChat(phone, redisKey, isArchive) {
 
   if (isConvLockedByOther(phone)) showDupeWarning("convs");
   lockConvTab(phone);
+
+  if (!isArchive) touchActiveAttendant(phone);
 
   await refreshConvsChat(phone, openConvsRedisKey);
   // Não faz polling para archives — o histórico não muda
@@ -3954,6 +4138,7 @@ function renderConvsChat(data) {
 
   // Janela de 24h
   updateWindowUI("convs", data);
+  renderActiveAttendantNotice("convs", data);
 
   const container = document.getElementById("convs-messages");
   if (!container) return;
@@ -4066,7 +4251,8 @@ async function saveCardData(prefix) {
 // ║  BOLHAS DE MENSAGEM                                          ║
 // ╚══════════════════════════════════════════════════════════════╝
 function appendBubble(container, msg, optimistic = false) {
-  const { role, content, sentByHuman, mediaType, mediaData, mediaMimeType, mediaFilename } = msg;
+  const { role, content, sentByHuman, mediaType, mediaData, mediaMimeType, mediaFilename,
+          attendantId, attendantName } = msg;
 
   const wrap = document.createElement("div");
   wrap.className = `bubble-wrap ${role === "user" ? "left" : "right"}`;
@@ -4075,7 +4261,7 @@ function appendBubble(container, msg, optimistic = false) {
   let cls = "client", label = "";
   if (role !== "user") {
     cls   = sentByHuman ? "human" : "bot";
-    label = sentByHuman ? "Você" : "Bot";
+    label = sentByHuman ? (attendantName || "Você") : "Bot";
   }
   bubble.className = `bubble ${cls}${optimistic ? " optimistic" : ""}`;
   if (optimistic) {
@@ -4138,8 +4324,18 @@ function appendBubble(container, msg, optimistic = false) {
 
   if (label) {
     const lbl = document.createElement("div");
-    lbl.className   = "bubble-label";
-    lbl.textContent = label;
+    lbl.className = "bubble-label";
+    if (sentByHuman && attendantId) {
+      const _ap = ATTENDANT_PROFILES.find(p => p.id === attendantId);
+      if (_ap) {
+        const av = document.createElement("span");
+        av.className = "att-initial";
+        av.style.background = _ap.color;
+        av.textContent = _ap.initials;
+        lbl.appendChild(av);
+      }
+    }
+    lbl.appendChild(document.createTextNode(label));
     wrap.appendChild(lbl);
   }
 
@@ -4362,14 +4558,22 @@ async function sendMessage(prefix) {
 
 async function sendTextMessage(prefix, container, text) {
   const phone = getPhoneForPrefix(prefix);
-  appendBubble(container, { role:"assistant", content:text, sentByHuman:true }, true);
+  const att   = getCurrentAttendant();
+  appendBubble(container, {
+    role: "assistant", content: text, sentByHuman: true,
+    attendantId: att?.id, attendantName: att?.name,
+  }, true);
   scrollToBottom(container);
 
   try {
     const res = await fetch("/api/send", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ to: phone, type: "text", message: text }),
+      body:    JSON.stringify({
+        to: phone, type: "text", message: text,
+        attendantId:   att?.id   || null,
+        attendantName: att?.name || null,
+      }),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -4384,11 +4588,13 @@ async function sendTextMessage(prefix, container, text) {
 
 async function sendImageMessage(prefix, container, caption) {
   const phone = getPhoneForPrefix(prefix);
+  const att   = getCurrentAttendant();
   const { base64, mimeType } = pendingMedia[prefix];
 
   appendBubble(container, {
     role:"assistant", content:caption, sentByHuman:true,
     mediaType:"image", mediaData:base64, mediaMimeType:mimeType,
+    attendantId: att?.id, attendantName: att?.name,
   }, true);
   scrollToBottom(container);
   clearImage(prefix);
@@ -4397,7 +4603,11 @@ async function sendImageMessage(prefix, container, caption) {
     const res = await fetch("/api/send", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ to: phone, type: "image", mediaBase64: base64, mimeType, caption }),
+      body:    JSON.stringify({
+        to: phone, type: "image", mediaBase64: base64, mimeType, caption,
+        attendantId:   att?.id   || null,
+        attendantName: att?.name || null,
+      }),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -4412,12 +4622,14 @@ async function sendImageMessage(prefix, container, caption) {
 
 async function sendDocumentMessage(prefix, container, caption) {
   const phone = getPhoneForPrefix(prefix);
+  const att   = getCurrentAttendant();
   const { base64, mimeType, filename } = pendingMedia[prefix];
 
   // Bolha otimista com ícone de documento
   appendBubble(container, {
     role: "assistant", content: caption, sentByHuman: true,
     mediaType: "document", mediaData: base64, mediaMimeType: mimeType, mediaFilename: filename,
+    attendantId: att?.id, attendantName: att?.name,
   }, true);
   scrollToBottom(container);
   clearImage(prefix);
@@ -4426,7 +4638,11 @@ async function sendDocumentMessage(prefix, container, caption) {
     const res = await fetch("/api/send", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ to: phone, type: "document", mediaBase64: base64, mimeType, filename, caption }),
+      body:    JSON.stringify({
+        to: phone, type: "document", mediaBase64: base64, mimeType, filename, caption,
+        attendantId:   att?.id   || null,
+        attendantName: att?.name || null,
+      }),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -5697,8 +5913,251 @@ function restartOnboarding() {
 
 loadQueue();
 startAutoRefresh();
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ATENDENTE ATIVO — AVISO OPERACIONAL                         ║
+// ╚══════════════════════════════════════════════════════════════╝
+let _aaIntervalId = null;
+
+function isActiveAttendantFresh(activeAttendantAt) {
+  if (!activeAttendantAt) return false;
+  return (Date.now() - new Date(activeAttendantAt).getTime()) < 3 * 60 * 1000;
+}
+
+function renderActiveAttendantNotice(prefix, data) {
+  const bar = document.getElementById(`${prefix}-aa-bar`);
+  if (!bar) return;
+  const { activeAttendant, activeAttendantAt } = data;
+  const current = getCurrentAttendant();
+  if (!activeAttendant || !isActiveAttendantFresh(activeAttendantAt)) {
+    bar.className = "active-attendant-bar hidden";
+    bar.textContent = "";
+    return;
+  }
+  if (current && activeAttendant.id === current.id) {
+    bar.className = "active-attendant-bar aa-self";
+    bar.textContent = "Você está atendendo esta conversa";
+  } else {
+    bar.className = "active-attendant-bar aa-other";
+    bar.textContent = `Atenção: ${activeAttendant.name} está com esta conversa aberta`;
+  }
+}
+
+async function touchActiveAttendant(phone) {
+  const att = getCurrentAttendant();
+  if (!att || !phone) return;
+  try {
+    await fetch("/api/active-attendant", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ phone, attendant: att }),
+    });
+  } catch {}
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PERFIS DE ATENDENTE                                         ║
+// ╚══════════════════════════════════════════════════════════════╝
+const ATTENDANT_PROFILES = [
+  { id: "ana_paula",  name: "Ana Paula",  initials: "AP", color: "#3b82f6" },
+  { id: "ana_flores", name: "Ana Flores", initials: "AF", color: "#8b5cf6" },
+  { id: "pedro",      name: "Pedro",      initials: "PE", color: "#10b981" },
+  { id: "eli",        name: "Eli",        initials: "EL", color: "#f59e0b" },
+  { id: "ilza",       name: "Ilza",       initials: "IL", color: "#ec4899" },
+  { id: "denise",     name: "Denise",     initials: "DE", color: "#06b6d4" },
+];
+
+function getCurrentAttendant() {
+  const raw = localStorage.getItem("sartec_current_attendant");
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+function renderAttendantBadge(att) {
+  const avatar = document.getElementById("attendant-avatar");
+  const name   = document.getElementById("attendant-name");
+  if (avatar) { avatar.textContent = att.initials; avatar.style.background = att.color; }
+  if (name)   name.textContent = att.name;
+}
+
+function setAttendant(id) {
+  const profile = ATTENDANT_PROFILES.find(p => p.id === id);
+  if (!profile) return;
+  localStorage.setItem("sartec_current_attendant", JSON.stringify(profile));
+  renderAttendantBadge(profile);
+  closeAttendantPicker();
+}
+
+function openAttendantPicker(required = false) {
+  const grid = document.getElementById("attendant-picker-grid");
+  if (!grid) return;
+  const current = getCurrentAttendant();
+  grid.innerHTML = ATTENDANT_PROFILES.map(p =>
+    `<button class="attendant-picker-item" onclick="setAttendant('${p.id}')">
+      <span class="attendant-picker-avatar" style="background:${p.color}">${p.initials}</span>
+      ${esc(p.name)}
+    </button>`
+  ).join("");
+  const closeBtn = document.getElementById("attendant-picker-close");
+  if (closeBtn) closeBtn.style.display = required ? "none" : "";
+  document.getElementById("attendant-picker-modal").classList.remove("hidden");
+}
+
+function closeAttendantPicker() {
+  const m = document.getElementById("attendant-picker-modal");
+  if (m) m.classList.add("hidden");
+}
+
+function initAttendant() {
+  const saved = getCurrentAttendant();
+  if (saved) {
+    renderAttendantBadge(saved);
+  } else {
+    setTimeout(() => openAttendantPicker(true), 600);
+  }
+}
+
+function introduceAttendant(prefix) {
+  const att = getCurrentAttendant();
+  if (!att) { openAttendantPicker(true); return; }
+  const inp = document.getElementById(`${prefix}-msg-input`);
+  if (!inp) return;
+  const greeting = `Olá, meu nome é ${att.name} e vou continuar seu atendimento por aqui.`;
+  inp.value = inp.value.trim() ? greeting + "\n" + inp.value : greeting;
+  autoResize(inp);
+  inp.focus();
+}
+
+initAttendant();
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  BUSCA DE CONTATOS                                           ║
+// ╚══════════════════════════════════════════════════════════════╝
+let _srTimer = null;
+let _srReqId = 0;
+let _srList  = [];
+
+function relTimeCR(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return "agora";
+  if (m < 60) return `há ${m}min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `há ${h}h`;
+  return `há ${Math.floor(h / 24)}d`;
+}
+
+function closeContactResults() {
+  const r = document.getElementById("contact-results");
+  if (r) { r.style.display = "none"; r.innerHTML = ""; }
+}
+
+async function fetchContactSearch(q) {
+  const myId = ++_srReqId;
+  try {
+    const res  = await fetch(`/api/contacts?search=${encodeURIComponent(q)}&limit=20`);
+    if (myId !== _srReqId) return;
+    if (!res.ok) return;
+    const data = await res.json();
+    if (myId !== _srReqId) return;
+    renderContactResults(data.contacts || []);
+  } catch {}
+}
+
+function renderContactResults(contacts) {
+  _srList = contacts;
+  const el = document.getElementById("contact-results");
+  if (!el) return;
+  if (!contacts.length) {
+    el.innerHTML = `<div class="contact-results-empty">Nenhum contato encontrado</div>`;
+    el.style.display = "block";
+    return;
+  }
+  el.innerHTML = contacts.map((c, i) => {
+    const name  = esc(c.clientName || c.whatsappName || c.phone || "—");
+    const badge = c.clientType === "pj"
+      ? `<span class="cri-badge pj">PJ</span>`
+      : c.clientType === "pf"
+        ? `<span class="cri-badge pf">PF</span>`
+        : "";
+    const last   = relTimeCR(c.lastActivityAt);
+    const phone  = c.phone ? `+${c.phone}` : "";
+    const status = c.lastPipelineStatus || c.lastConversationStatus || "";
+    const sub    = esc([phone, status, last].filter(Boolean).join(" · "));
+    return `<div class="contact-result-item" data-idx="${i}"><div class="cri-name">${name}${badge}</div><div class="cri-meta">${sub}</div></div>`;
+  }).join("");
+  el.querySelectorAll(".contact-result-item").forEach(item => {
+    item.addEventListener("click", () => openContactResult(_srList[+item.dataset.idx]));
+  });
+  el.style.display = "block";
+}
+
+async function openContactResult(contact) {
+  if (!contact?.phone) return;
+  const inp = document.getElementById("header-search-input");
+  if (inp) inp.value = "";
+  closeContactResults();
+  const phone = contact.phone;
+
+  // Contato já tem sessão ativa no Kanban — abre direto
+  const active = allConvs.find(c => c.phone === phone);
+  if (active) {
+    openChat(phone);
+    return;
+  }
+
+  // Contato sem sessão ativa — reabrir via API
+  showToast("Reabrindo contato…");
+  try {
+    const res = await fetch("/api/contacts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, action: "reopen" }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(`Erro ao reabrir: ${err.error || "falha"}`, "t-err");
+      return;
+    }
+    // Sessão existe no Redis — abre o modal imediatamente
+    openChat(phone);
+    // Atualiza o Kanban em background (não bloqueia a abertura)
+    loadQueue();
+    showToast("Contato reaberto ✓");
+  } catch {
+    showToast("Falha de rede ao reabrir contato.", "t-err");
+  }
+}
+
+(function initContactSearch() {
+  const input = document.getElementById("header-search-input");
+  const wrap  = document.getElementById("header-search-wrap");
+  if (!input || !wrap) return;
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    clearTimeout(_srTimer);
+    if (!q) { closeContactResults(); return; }
+    _srTimer = setTimeout(() => fetchContactSearch(q), 300);
+  });
+  input.addEventListener("keydown", e => {
+    if (e.key === "Escape") { input.value = ""; closeContactResults(); }
+  });
+  document.addEventListener("click", e => {
+    if (!wrap.contains(e.target)) closeContactResults();
+  });
+})();
 </script>
 <div id="toast-container"></div>
+
+<!-- ══════ ATTENDANT PICKER ══════ -->
+<div id="attendant-picker-modal" class="modal-overlay hidden">
+  <div class="attendant-picker-box">
+    <button class="attendant-picker-close" id="attendant-picker-close" onclick="closeAttendantPicker()">✕</button>
+    <h3 class="attendant-picker-title">Quem está atendendo agora?</h3>
+    <div class="attendant-picker-grid" id="attendant-picker-grid"></div>
+  </div>
+</div>
 
 <!-- ══════ ONBOARDING TOUR ══════ -->
 <div id="ob-wrap" class="ob-hidden">
