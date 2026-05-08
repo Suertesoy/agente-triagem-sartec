@@ -3015,20 +3015,27 @@ function switchTab(tab) {
 let _obAutoStarted = false;
 
 async function loadQueue() {
+  console.log("[loadQueue] ▶ start");
   try {
     const res  = await fetch("/api/queue");
+    console.log("[loadQueue] status:", res.status);
     const data = await res.json();
+    console.log("[loadQueue] conversations:", (data.conversations||[]).length);
     allConvs   = data.conversations || [];
+    console.log("[loadQueue] before renderPipeline, __onboardingActive:", window.__onboardingActive);
     if (!window.__onboardingActive) {
       renderPipeline(allConvs);
+      console.log("[loadQueue] after renderPipeline");
       if (window.innerWidth <= 768) { renderMobStageCards("pf",_mobActiveStage.pf||"novo"); renderMobStageCards("pj",_mobActiveStage.pj||"novo"); }
     }
+    console.log("[loadQueue] before updateHeader");
     updateHeader(allConvs);
+    console.log("[loadQueue] ✅ done");
     updateDocTitle(allConvs);
     detectNewCards(allConvs);
     if (!_obAutoStarted) { _obAutoStarted = true; if (!localStorage.getItem("sartec_ob_done")) setTimeout(obStart, 1200); }
   } catch (e) {
-    console.error("[loadQueue]", e);
+    console.error("[loadQueue] ❌", e);
     const wc = document.getElementById("waiting-count");
     if (wc) wc.textContent = "Erro ao carregar — verifique a conexão";
   }
