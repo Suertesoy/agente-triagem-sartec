@@ -5379,7 +5379,7 @@ function initMobileKanban() {
     filterEl.id = "mob-filter-" + tab;
     let chips = '<div class="mob-stage-chips" id="mob-chips-' + tab + '">';
     stages.forEach(function(s, i) {
-      chips += '<button class="mob-chip' + (i===0?" active":"") + '" data-stage="' + s.key + '" onclick="selectMobStage('' + tab + '','' + s.key + '',this)">' + s.label + '</button>';
+      chips += '<button class="mob-chip' + (i===0?" active":"") + '" data-stage="' + s.key + '" onclick="selectMobStage(\'' + tab + '\',\'' + s.key + '\',this)">' + s.label + '</button>';
     });
     chips += '</div>';
     filterEl.innerHTML = chips + '<div id="mob-stage-cards-' + tab + '"></div>';
