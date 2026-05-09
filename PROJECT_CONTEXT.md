@@ -49,3 +49,78 @@ Templates são obrigatórios quando a janela está fechada
 
 Objetivo do produto:
 Ajudar a Sartec a organizar atendimentos PF e PJ, reduzir perda de mensagens no WhatsApp, facilitar triagem com IA e dar contexto para o atendimento humano
+
+## SITE PÚBLICO — CONTEXTO E OBJETIVO
+
+O site da Sartec não é um e-commerce.
+
+Ele funciona como:
+
+vitrine de produtos
+canal de entrada de leads
+ponte direta para o WhatsApp
+suporte ao CRM interno
+
+Objetivo principal:
+Levar o usuário a entrar em contato via WhatsApp de forma rápida e natural.
+
+POSICIONAMENTO
+
+A Sartec deve ser percebida como:
+
+papelaria de bairro consolidada
+com variedade de produtos
+atendimento próximo e humano
+solução prática para o dia a dia
+ESTRATÉGIA DA HOME
+
+A home NÃO deve ser centrada apenas em lista escolar.
+
+A narrativa principal é:
+
+"temos produtos, variedade e atendimento rápido"
+
+A lista escolar é:
+
+uma funcionalidade importante
+mas sazonal
+não define a identidade do site
+PAPEL DAS PÁGINAS
+
+Home:
+
+apresentar a loja
+destacar produtos
+direcionar para WhatsApp
+
+Produtos:
+
+gerar desejo
+incentivar contato via WhatsApp
+
+Lista Escolar:
+
+fluxo funcional específico (upload + envio)
+foco em conversão em época sazonal
+
+Cópias:
+
+serviço com canal dedicado
+
+Empresas:
+
+fluxo B2B com cadastro e pedido estruturado
+REGRA DE UX IMPORTANTE
+
+Sempre priorizar:
+
+clareza
+rapidez de ação
+acesso fácil ao WhatsApp
+navegação simples no mobile
+
+Evitar:
+
+excesso de informação
+fluxos complexos
+decisões que afastem o usuário do contato

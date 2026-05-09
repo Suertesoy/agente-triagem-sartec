@@ -157,6 +157,7 @@ async function handleReopen(req, res) {
       contact.lastConversationStatus = "aguardando_humano";
       contact.lastPipelineStatus     = finalSession.pipelineStatus;
       contact.lastActivityAt         = now;
+      contact.lastSeenAt             = now;
       contact.updatedAt              = now;
       await redis.set(`sartec:contact:${phone}`, JSON.stringify(contact));
     } catch (err) {

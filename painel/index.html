@@ -162,8 +162,9 @@
     .btn-introduce {
       background: none; border: 1px solid var(--border);
       color: var(--text-secondary); font-size: .68rem;
-      padding: 5px 9px; border-radius: 7px; cursor: pointer;
+      padding: 0 9px; border-radius: 7px; cursor: pointer;
       white-space: nowrap; flex-shrink: 0;
+      height: 36px; display: inline-flex; align-items: center;
       transition: border-color .15s, color .15s;
     }
     .btn-introduce:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
@@ -1195,6 +1196,18 @@
 
     .bubble-label { font-size: .62rem; color: var(--text-secondary); margin-top: 2px; padding: 0 3px; }
     .bubble-time  { font-size: .58rem; color: var(--text-muted); margin-top: 1px; padding: 0 3px; }
+    .new-msgs-divider {
+      display: block; text-align: center; font-size: .62rem; font-weight: 600;
+      color: #1d4ed8; padding: 3px 12px; margin: 6px auto;
+      background: #eff6ff; border-radius: 20px; width: fit-content;
+      cursor: pointer; transition: background .1s;
+    }
+    .new-msgs-divider:hover { background: #dbeafe; }
+    .bubble-new-other { outline: 1.5px solid rgba(59,130,246,.35); outline-offset: 3px; }
+    .conv-new-badge {
+      font-size: .55rem; font-weight: 700; background: #3b82f6; color: #fff;
+      padding: 1px 5px; border-radius: 20px; margin-left: 5px; vertical-align: middle;
+    }
 
     /* ── Mídia nas bolhas ── */
     .bubble-img {
@@ -2416,6 +2429,7 @@
       .attendant-name { display:none; }
       .attendant-chip { padding:4px 5px; }
       .btn-camera { display:flex; }
+      .btn-introduce { display:none; }
       .stats-strip, .tab-bar { display:none; }
       .view.active { display:flex;flex-direction:column; }
       #view-pf.active, #view-pj.active { height:calc(100dvh - 52px - 56px);overflow:hidden; }
@@ -2551,7 +2565,6 @@
 
     <!-- Barra de janela de 24h -->
     <div class="window-status-bar ws-unknown" id="modal-window-bar"></div>
-    <div class="active-attendant-bar hidden" id="modal-aa-bar"></div>
     <div class="dupe-tab-warning hidden" id="modal-dupe-warning">
       ⚠️ Esta conversa está aberta em outra aba. Evite editar ao mesmo tempo para não perder informações.
     </div>
@@ -2606,6 +2619,7 @@
     <div class="messages" id="modal-messages"></div>
 
     <div class="composer">
+      <div class="active-attendant-bar hidden" id="modal-aa-bar"></div>
       <!-- Lock da janela de 24h — aparece quando janela está fechada/aguardando -->
       <div class="composer-lock-bar" id="modal-composer-lock" style="display:none"></div>
       <div class="img-preview-bar" id="modal-img-preview-bar">
@@ -3257,7 +3271,7 @@ async function loadQueue() {
     console.log("[loadQueue] ✅ done");
     updateDocTitle(allConvs);
     detectNewCards(allConvs);
-    if (!_obAutoStarted) { _obAutoStarted = true; if (window.innerWidth > 768 && !localStorage.getItem("sartec_ob_done")) setTimeout(obStart, 1200); }
+    if (!_obAutoStarted && getCurrentAttendant()) { _obAutoStarted = true; if (window.innerWidth > 768 && !localStorage.getItem("sartec_ob_done")) setTimeout(obStart, 1200); }
   } catch (e) {
     console.error("[loadQueue] ❌", e);
     const wc = document.getElementById("waiting-count");
@@ -3807,15 +3821,27 @@ async function openChat(phone) {
     if (openModalPhone === phone) touchActiveAttendant(phone);
     else clearInterval(_aaIntervalId);
   }, 60000);
+  clearInterval(_chatPollId);
+  _chatPollId = setInterval(() => {
+    if (openModalPhone === phone) refreshModal();
+    else clearInterval(_chatPollId);
+  }, 6000);
 
+  delete _lastMsgCountByPhone[phone];
   await refreshModal();
 }
 
 async function refreshModal() {
   if (!openModalPhone) return;
   try {
-    const res  = await fetch(`/api/conversation?phone=${openModalPhone}`);
-    const data = await res.json();
+    const res      = await fetch(`/api/conversation?phone=${openModalPhone}`);
+    const data     = await res.json();
+    const newCount = (data.history || []).length;
+    if (openModalPhone in _lastMsgCountByPhone && _lastMsgCountByPhone[openModalPhone] === newCount) {
+      updateWindowUI("modal", data);
+      renderActiveAttendantNotice("modal", data);
+      return;
+    }
     renderModal(data);
   } catch (e) { console.error("[refreshModal]", e); }
 }
@@ -3867,7 +3893,7 @@ function renderModal(data) {
   updateWindowUI("modal", data);
   renderActiveAttendantNotice("modal", data);
 
-  populateDadosForm("modal", data);
+  populateDadosFormSafe("modal", data);
 
   // ── Resumo colapsável para o atendente ──
   let summaryBlock = document.getElementById("modal-summary-block");
@@ -3886,30 +3912,61 @@ function renderModal(data) {
     summaryBlock.style.display = "none";
   }
 
-  const container = document.getElementById("modal-messages");
+  const container  = document.getElementById("modal-messages");
+  const atBottom   = isNearBottom(container);
+  const history    = data.history || [];
+  const prevCount  = _lastMsgCountByPhone[data.phone] || 0;
+  const currentAtt = getCurrentAttendant();
+  const newMsgs    = history.slice(prevCount);
+  const hasNewFromOther = prevCount > 0 && newMsgs.some(
+    m => m.sentByHuman && m.attendantId && m.attendantId !== currentAtt?.id
+  );
+  _lastMsgCountByPhone[data.phone] = history.length;
 
   // Preserva bolhas otimistas
   const optimistic = Array.from(container.querySelectorAll(".optimistic"))
     .map(el => ({ content: el.dataset.content, mediaType: el.dataset.mediaType || null }));
 
   container.innerHTML = "";
-  for (const msg of data.history || []) appendBubble(container, msg);
+  for (let i = 0; i < prevCount && i < history.length; i++) {
+    appendBubble(container, history[i]);
+  }
+  if (hasNewFromOther && !atBottom && newMsgs.length > 0) {
+    const divider = document.createElement("div");
+    divider.className = "new-msgs-divider";
+    divider.textContent = "↓ Novas mensagens";
+    divider.onclick = () => { scrollToBottom(container); clearConvHasNew(data.phone); divider.remove(); };
+    container.appendChild(divider);
+  }
+  for (let i = prevCount; i < history.length; i++) {
+    appendBubble(container, history[i]);
+    if (hasNewFromOther && history[i].sentByHuman &&
+        history[i].attendantId && history[i].attendantId !== currentAtt?.id) {
+      const lastBubble = container.querySelector(".bubble-wrap:last-child .bubble");
+      if (lastBubble) lastBubble.classList.add("bubble-new-other");
+    }
+  }
 
-  const serverContents = new Set(
-    (data.history || []).filter(m => m.sentByHuman).map(m => m.content)
-  );
+  const serverContents = new Set(history.filter(m => m.sentByHuman).map(m => m.content));
   for (const o of optimistic) {
     if (!serverContents.has(o.content)) {
       appendBubble(container, { role:"assistant", content:o.content, sentByHuman:true,
         mediaType: o.mediaType }, true);
     }
   }
-  scrollToBottom(container);
+  if (atBottom) {
+    scrollToBottom(container);
+    clearConvHasNew(data.phone);
+  } else if (hasNewFromOther) {
+    markConvHasNew(data.phone);
+  }
 }
 
 function closeModal() {
   clearInterval(_aaIntervalId);
   _aaIntervalId = null;
+  clearInterval(_chatPollId);
+  _chatPollId = null;
   unlockConvTab(openModalPhone);
   openModalPhone = null;
   document.getElementById("chat-modal").classList.add("hidden");
@@ -4071,12 +4128,12 @@ async function openConvsChat(phone, redisKey, isArchive) {
     </div>
     <!-- Barra de janela de 24h -->
     <div class="window-status-bar ws-unknown" id="convs-window-bar"></div>
-    <div class="active-attendant-bar hidden" id="convs-aa-bar"></div>
     <div class="dupe-tab-warning hidden" id="convs-dupe-warning">
       ⚠️ Esta conversa está aberta em outra aba. Evite editar ao mesmo tempo para não perder informações.
     </div>
     <div class="messages" id="convs-messages" style="flex:1;overflow-y:auto;padding:14px"></div>
     ${!isArchive ? `<div class="composer">
+      <div class="active-attendant-bar hidden" id="convs-aa-bar"></div>
       <div class="img-preview-bar" id="convs-img-preview-bar">
         <img id="convs-img-thumb" src="" alt="preview">
         <input class="caption-input" id="convs-img-caption" placeholder="Legenda (opcional)">
@@ -4105,6 +4162,7 @@ async function openConvsChat(phone, redisKey, isArchive) {
 
   if (!isArchive) touchActiveAttendant(phone);
 
+  delete _lastMsgCountByPhone[phone];
   await refreshConvsChat(phone, openConvsRedisKey);
   // Não faz polling para archives — o histórico não muda
   if (!isArchive) startConvsChatPoll(phone, openConvsRedisKey);
@@ -4143,6 +4201,8 @@ function renderConvsChat(data) {
   const container = document.getElementById("convs-messages");
   if (!container) return;
 
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+
   const optimistic = Array.from(container.querySelectorAll(".optimistic"))
     .map(el => ({ content: el.dataset.content, mediaType: el.dataset.mediaType || null }));
 
@@ -4158,7 +4218,7 @@ function renderConvsChat(data) {
         mediaType: o.mediaType }, true);
     }
   }
-  scrollToBottom(container);
+  if (wasAtBottom) scrollToBottom(container);
 }
 
 function startConvsPoll() {
@@ -5914,10 +5974,40 @@ function restartOnboarding() {
 loadQueue();
 startAutoRefresh();
 
+// ── helpers de refresh inteligente ──────────────────────────────
+function isNearBottom(el) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+}
+
+function populateDadosFormSafe(prefix, data) {
+  const focused = document.activeElement;
+  const sec = document.getElementById(`${prefix}-dados-section`);
+  if (sec && sec.contains(focused)) return;
+  populateDadosForm(prefix, data);
+}
+
+function markConvHasNew(phone) {
+  const item = document.querySelector(`.conv-item[data-phone="${phone}"]`);
+  if (!item || item.querySelector(".conv-new-badge")) return;
+  const nameRow = item.querySelector(".conv-name-row");
+  if (!nameRow) return;
+  const badge = document.createElement("span");
+  badge.className = "conv-new-badge";
+  badge.textContent = "novo";
+  nameRow.appendChild(badge);
+}
+
+function clearConvHasNew(phone) {
+  document.querySelectorAll(`.conv-item[data-phone="${phone}"] .conv-new-badge`)
+    .forEach(el => el.remove());
+}
+
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  ATENDENTE ATIVO — AVISO OPERACIONAL                         ║
 // ╚══════════════════════════════════════════════════════════════╝
 let _aaIntervalId = null;
+let _chatPollId   = null;
+const _lastMsgCountByPhone = {};
 
 function isActiveAttendantFresh(activeAttendantAt) {
   if (!activeAttendantAt) return false;
@@ -5986,6 +6076,10 @@ function setAttendant(id) {
   localStorage.setItem("sartec_current_attendant", JSON.stringify(profile));
   renderAttendantBadge(profile);
   closeAttendantPicker();
+  if (!_obAutoStarted && window.innerWidth > 768 && !localStorage.getItem("sartec_ob_done")) {
+    _obAutoStarted = true;
+    setTimeout(obStart, 800);
+  }
 }
 
 function openAttendantPicker(required = false) {
