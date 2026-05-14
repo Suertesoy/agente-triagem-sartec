@@ -2194,23 +2194,25 @@
     }
     .card-zone-mid {
       background: transparent;
-      border-left: 2px solid rgba(26,42,94,.10);
+      border-left: none;
       border-radius: 0;
-      padding: 4px 9px;
-      margin: 3px 0 5px;
+      padding: 2px 0;
+      margin: 2px 0 6px;
       flex: 1;
     }
     .card-zone-footer {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .card-zone-footer-meta {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       flex-wrap: nowrap;
       overflow: hidden;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(0,0,0,.05);
     }
     .card.triagem_incompleta .card-zone-footer-meta {
       flex-wrap: wrap;
@@ -2299,21 +2301,22 @@
     .card-open-hint {
       display: inline-flex;
       align-items: center;
-      align-self: flex-start;
+      align-self: stretch;
+      justify-content: center;
       gap: 4px;
       font-size: .61rem;
       font-weight: 500;
       color: var(--text-muted);
-      background: transparent;
-      border: 1px solid rgba(0,0,0,.06);
+      background: rgba(26,42,94,.02);
+      border: 1px solid rgba(0,0,0,.05);
       border-radius: 6px;
-      padding: 3px 8px;
+      padding: 5px 8px;
       cursor: pointer;
       letter-spacing: .01em;
-      opacity: .7;
+      opacity: .75;
       transition: background .15s, border-color .15s, color .15s, opacity .15s;
     }
-    .card-open-hint:hover { background: rgba(26,42,94,.04); border-color: rgba(26,42,94,.14); color: var(--text-secondary); opacity: 1; }
+    .card-open-hint:hover { background: rgba(26,42,94,.05); border-color: rgba(26,42,94,.14); color: var(--text-secondary); opacity: 1; }
 
     /* ── Resumo operacional — expand do card ── */
     .card-expand-summary {
