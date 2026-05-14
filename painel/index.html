@@ -633,10 +633,11 @@
     /* Linha interna de selects */
     .card-actions-row {
       display: flex;
-      align-items: center;
-      gap: 5px;
+      align-items: stretch;
+      gap: 6px;
     }
     .card-actions-row .card-open-hint { flex: 1; }
+    .card-actions-row .btn-resolve-inline { margin-left: 0; padding: 5px 10px; }
     .status-select, .type-select {
       font-size: .7rem;
       border: 1px solid var(--border);
@@ -1771,13 +1772,14 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-size: .75rem;
-      padding: 2px 5px;
+      font-size: .72rem;
+      padding: 2px 4px;
       border-radius: 4px;
       color: var(--text-muted);
       flex-shrink: 0;
+      opacity: .55;
     }
-    .btn-cat-mgr:hover { background: var(--bg-main); color: var(--text-primary); }
+    .btn-cat-mgr:hover { background: var(--bg-main); color: var(--text-primary); opacity: 1; }
 
     /* ── Botão Nova conversa ── */
     .convs-new-btn {
@@ -2305,19 +2307,19 @@
       align-self: stretch;
       justify-content: center;
       gap: 4px;
-      font-size: .61rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      background: rgba(26,42,94,.02);
-      border: 1px solid rgba(0,0,0,.05);
+      font-size: .63rem;
+      font-weight: 600;
+      color: var(--brand-navy);
+      background: rgba(26,42,94,.06);
+      border: 1px solid rgba(26,42,94,.14);
       border-radius: 6px;
       padding: 5px 8px;
       cursor: pointer;
       letter-spacing: .01em;
-      opacity: .75;
-      transition: background .15s, border-color .15s, color .15s, opacity .15s;
+      opacity: 1;
+      transition: background .15s, border-color .15s, color .15s;
     }
-    .card-open-hint:hover { background: rgba(26,42,94,.05); border-color: rgba(26,42,94,.14); color: var(--text-secondary); opacity: 1; }
+    .card-open-hint:hover { background: rgba(26,42,94,.12); border-color: rgba(26,42,94,.26); color: var(--brand-navy-mid); }
 
     /* ── Resumo operacional — expand do card ── */
     .card-expand-summary {
