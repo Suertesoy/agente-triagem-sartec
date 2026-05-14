@@ -619,6 +619,8 @@
       background: #fef9c3;
       color: #a16207;
       margin-left: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ─ Card actions ─ */
@@ -2209,6 +2211,10 @@
       gap: 5px;
       flex-wrap: nowrap;
       overflow: hidden;
+    }
+    .card.triagem_incompleta .card-zone-footer-meta {
+      flex-wrap: wrap;
+      overflow: visible;
     }
     .card-msg-count {
       margin-left: auto;
