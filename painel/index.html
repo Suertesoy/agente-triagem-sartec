@@ -985,8 +985,45 @@
     }
     @media (min-width: 900px) {
       .modal-box {
-        max-width: min(92vw, 1040px);
+        max-width: min(94vw, 1180px);
         max-height: 880px;
+        display: grid;
+        grid-template-columns: minmax(320px, 340px) minmax(0, 1fr);
+        grid-template-rows: auto auto auto auto 1fr auto;
+      }
+      .modal-header,
+      .window-status-bar,
+      .dupe-tab-warning {
+        grid-column: 1 / -1;
+      }
+      .modal-header      { grid-row: 1; }
+      .window-status-bar { grid-row: 2; }
+      .dupe-tab-warning  { grid-row: 3; }
+      #modal-summary-block {
+        grid-column: 1;
+        grid-row: 4;
+        overflow-y: auto;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        border-left: none;
+      }
+      #modal-dados-section {
+        grid-column: 1;
+        grid-row: 5 / 7;
+        overflow-y: auto;
+        border-right: 1px solid var(--border);
+        border-bottom: none;
+      }
+      .messages {
+        grid-column: 2;
+        grid-row: 4 / 6;
+        min-width: 0;
+        overflow-y: auto;
+      }
+      .composer {
+        grid-column: 2;
+        grid-row: 6;
+        min-width: 0;
       }
     }
 
