@@ -57,19 +57,19 @@
       background: var(--brand-navy);
       color: #fff;
       padding: 0 24px;
-      height: 64px;
+      height: 60px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       position: sticky;
       top: 0;
       z-index: 300;
-      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
     }
 
     .brand { display: flex; flex-direction: column; line-height: 1.1; }
-    .brand-name { font-size: .95rem; font-weight: 900; letter-spacing: .06em; }
-    .brand-sub  { font-size: .65rem; opacity: .6; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; }
+    .brand-name { font-size: 1rem; font-weight: 900; letter-spacing: .06em; }
+    .brand-sub  { font-size: .62rem; opacity: .45; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; }
 
     .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,.2); flex-shrink: 0; }
 
@@ -102,17 +102,17 @@
     .refresh-state.rs-err      { color: #fca5a5; }
 
     .btn-logout {
-      background: rgba(255,255,255,.12);
+      background: rgba(255,255,255,.08);
       border: none;
       color: #fff;
-      padding: 5px 13px;
+      padding: 4px 11px;
       border-radius: 7px;
-      font-size: .75rem;
+      font-size: .72rem;
       cursor: pointer;
       white-space: nowrap;
       transition: background .15s;
     }
-    .btn-logout:hover { background: rgba(255,255,255,.22); }
+    .btn-logout:hover { background: rgba(255,255,255,.18); }
 
     /* ── Perfil do atendente ── */
     .attendant-chip {
@@ -187,16 +187,16 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 280px;
+      width: 220px;
       z-index: 10;
     }
     .header-search-input {
       width: 100%;
-      background: rgba(255,255,255,.11);
-      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13);
       border-radius: 8px;
-      padding: 6px 12px;
-      font-size: .8rem;
+      padding: 5px 12px;
+      font-size: .78rem;
       color: #fff;
       outline: none;
       transition: background .15s, border-color .15s;
@@ -240,12 +240,12 @@
        TAB BAR
     ══════════════════════════════════════════════════ */
     .tab-bar {
-      background: #f8f9fb;
+      background: #f0f2f8;
       border-bottom: 1px solid var(--border);
       padding: 0 16px;
       display: flex;
       gap: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.06);
+      box-shadow: 0 2px 6px rgba(0,0,0,.05);
     }
     .tab-btn {
       padding: 10px 16px;
@@ -261,7 +261,7 @@
       transition: color .15s, border-color .15s, background .15s;
       white-space: nowrap;
     }
-    .tab-btn.active { color: var(--brand-navy); border-bottom-color: var(--brand-navy); background: rgba(26,42,94,.07); }
+    .tab-btn.active { color: var(--brand-navy); border-bottom-color: var(--brand-navy); background: rgba(26,42,94,.10); }
     .tab-btn:hover:not(.active) { color: var(--text-primary); background: rgba(0,0,0,.03); }
     .tab-btn .tab-badge {
       display: inline-flex;
@@ -2451,8 +2451,8 @@
       flex-shrink: 0;
     }
     .stat-chip {
-      font-size: .67rem;
-      color: rgba(255,255,255,.65);
+      font-size: .69rem;
+      color: rgba(255,255,255,.68);
       white-space: nowrap;
       display: flex;
       align-items: center;
@@ -2524,12 +2524,12 @@
     #ob-wrap.ob-hidden .ob-tooltip { display: none !important; }
     /* Botão tutorial no header */
     .btn-tutorial {
-      background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.65);
+      background: transparent; border: none; color: rgba(255,255,255,.45);
       width: 26px; height: 26px; border-radius: 50%; font-size: .78rem; font-weight: 700;
       cursor: pointer; transition: background .15s, color .15s; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .btn-tutorial:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .btn-tutorial:hover { background: rgba(255,255,255,.14); color: #fff; }
 
     .mob-nav { display: none; }
     .mob-back-btn { display: none; }
