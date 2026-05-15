@@ -19,8 +19,8 @@ function getRedis() {
   return redisClient;
 }
 
-// 30 dias — muito além do TTL da sessão ativa (48h)
-const ARCHIVE_TTL = 60 * 60 * 24 * 30;
+// 90 dias — retenção mínima de histórico
+const ARCHIVE_TTL = 60 * 60 * 24 * 90;
 
 export default async function handler(req, res) {
   if (req.method === "GET")  return handleGet(req, res);

@@ -7,7 +7,7 @@ import Redis from "ioredis";
 
 let redisClient = null;
 
-const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias — alinhado com projeto
+const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 
 function getRedis() {
   if (!redisClient) {

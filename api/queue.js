@@ -19,7 +19,7 @@ function getRedis() {
   return redisClient;
 }
 
-const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias — alinhado com ARCHIVE_TTL
+const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 const INATIVO_MS  = 24 * 60 * 60 * 1000; // 24h sem atividade
 
 // Janela de 24h

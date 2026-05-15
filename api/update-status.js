@@ -18,7 +18,7 @@ function getRedis() {
   return redisClient;
 }
 
-const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias
+const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 
 async function withSessionLock(redis, phone, fn) {
   const lockKey = `lock:sartec:${phone}`;

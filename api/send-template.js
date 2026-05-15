@@ -34,7 +34,7 @@ function getRedis() {
   return redisClient;
 }
 
-const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias — alinhado com ARCHIVE_TTL
+const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 
 // ── Mapeamento tipo → nome aprovado na Meta ─────────────────────────────────
 // Para trocar o nome do template na Meta sem alterar código: edite as env vars.

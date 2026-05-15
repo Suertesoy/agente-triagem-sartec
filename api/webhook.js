@@ -31,7 +31,7 @@ function getRedis() {
   return redisClient;
 }
 
-const SESSION_TTL = 60 * 60 * 24 * 30; // 30 dias — alinhado com ARCHIVE_TTL
+const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 
 // ============================================================
 // ANTHROPIC
@@ -310,10 +310,10 @@ async function loadSession(phone) {
 
     const session = JSON.parse(raw);
 
-    // Reset por data calendário — não por 24h corridas
+    // Novo dia: apenas atualiza lastDate sem apagar histórico
     if (session.lastDate !== todayDate()) {
-      console.log(`[Sessão] 📅 Novo dia — resetando +${phone}`);
-      return createEmptySession();
+      session.lastDate = todayDate();
+      console.log(`[Sessão] 📅 Novo dia — atualizando lastDate de +${phone} sem resetar`);
     }
 
     return session;
