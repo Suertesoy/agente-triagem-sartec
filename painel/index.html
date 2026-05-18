@@ -1206,6 +1206,21 @@
       font-weight: 600;
       padding: 7px 14px;
     }
+    .btn-assume {
+      margin-left: auto;
+      font-size: .67rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(146,64,14,.3);
+      background: rgba(146,64,14,.08);
+      color: #92400e;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: background .12s, border-color .12s;
+    }
+    .btn-assume:hover { background: rgba(146,64,14,.18); border-color: rgba(146,64,14,.55); }
 
     /* ── Chip de atendente ativo no card do Kanban ── */
     .card-attendant-tag {
@@ -6285,15 +6300,16 @@ function renderActiveAttendantNotice(prefix, data) {
   const current = getCurrentAttendant();
   if (!activeAttendant || !isActiveAttendantFresh(activeAttendantAt)) {
     bar.className = "active-attendant-bar hidden";
-    bar.textContent = "";
+    bar.innerHTML = "";
     return;
   }
   if (current && activeAttendant.id === current.id) {
     bar.className = "active-attendant-bar aa-self";
     bar.textContent = "Você está atendendo esta conversa";
   } else {
+    const phone = prefix === "modal" ? openModalPhone : openConvsPhone;
     bar.className = "active-attendant-bar aa-other";
-    bar.textContent = `⚠ ${activeAttendant.name} está atendendo esta conversa agora — cuidado para não responder ao mesmo tempo`;
+    bar.innerHTML = `<span>⚠ ${esc(activeAttendant.name)} está atendendo esta conversa agora</span><button class="btn-assume" onclick="event.stopPropagation();assumeAttendant('${esc(phone || "")}','${prefix}')">Assumir atendimento</button>`;
   }
 }
 
@@ -6307,6 +6323,18 @@ async function touchActiveAttendant(phone) {
       body:    JSON.stringify({ phone, attendant: att }),
     });
   } catch {}
+}
+
+async function assumeAttendant(phone, prefix) {
+  const current = getCurrentAttendant();
+  if (!current || !phone) return;
+  await touchActiveAttendant(phone);
+  // Atualiza a barra visualmente de imediato, sem esperar polling
+  renderActiveAttendantNotice(prefix, {
+    activeAttendant:   current,
+    activeAttendantAt: new Date().toISOString(),
+  });
+  showToast("Atendimento assumido", "t-ok");
 }
 
 // ╔══════════════════════════════════════════════════════════════╗
