@@ -64,7 +64,7 @@ export default async function handler(req, res) {
         cursor, "MATCH", "sartec:*", "COUNT", 200
       );
       cursor = nextCursor;
-      allKeys.push(...found.filter((k) => !k.includes(":archive:")));
+      allKeys.push(...found.filter((k) => !k.includes(":archive:") && k !== "sartec:pipelineOrder"));
     } while (cursor !== "0");
 
     if (!allKeys.length) return res.status(200).json({ conversations: [] });
@@ -158,7 +158,13 @@ export default async function handler(req, res) {
       return new Date(a.handoffAt) - new Date(b.handoffAt);
     });
 
-    return res.status(200).json({ conversations });
+    let pipelineOrder = {};
+    try {
+      const rawOrder = await redis.get("sartec:pipelineOrder");
+      if (rawOrder) pipelineOrder = JSON.parse(rawOrder);
+    } catch {}
+
+    return res.status(200).json({ conversations, pipelineOrder });
   } catch (err) {
     console.error("[queue] ❌", err.message);
     return res.status(500).json({ error: "Erro ao carregar fila", detail: err.message });

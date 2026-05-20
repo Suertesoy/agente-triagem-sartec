@@ -82,6 +82,27 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
+
+  // ── Modo especial: persistir ordem manual do pipeline ──
+  if (body.action === "updatePipelineOrder") {
+    const { clientType, columnKey, order } = body;
+    if (!clientType || !columnKey || !Array.isArray(order)) {
+      return res.status(400).json({ error: "Campos clientType, columnKey e order são obrigatórios" });
+    }
+    try {
+      const redis = getRedis();
+      const rawOrder = await redis.get("sartec:pipelineOrder");
+      const pipelineOrder = rawOrder ? JSON.parse(rawOrder) : {};
+      pipelineOrder[`${clientType}:${columnKey}`] = order;
+      await redis.set("sartec:pipelineOrder", JSON.stringify(pipelineOrder), "EX", SESSION_TTL);
+      console.log(`[update-card] 📌 pipelineOrder ${clientType}:${columnKey} = ${order.length} cards`);
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("[update-card/pipelineOrder] ❌", err.message);
+      return res.status(500).json({ error: "Erro ao salvar ordem", detail: err.message });
+    }
+  }
+
   const { phone } = body;
 
   if (!phone) {

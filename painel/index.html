@@ -586,7 +586,7 @@
       overflow: visible;
     }
     .card-title:empty::before {
-      content: "Clique para adicionar resumo...";
+      content: attr(data-placeholder);
       color: var(--text-muted);
       font-style: italic;
       font-weight: 400;
@@ -3346,7 +3346,7 @@ function isUrgent(iso) {
 }
 
 // ── Sistema de prioridade ────────────────────────────────────────
-const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, baixa: 3, concluindo: 4 };
+const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, baixa: 3, nenhuma: 4, concluindo: 5 };
 const IRRITATION_SIGNALS = [
   "absurdo","irritad","rid\u00edculo","ridiculo","vergonha","demora",
   "p\u00e9ssimo","pessimo","horr\u00edvel","horrivel","cancelar",
@@ -3378,7 +3378,7 @@ function computePriority(conv) {
   if (waitMs > 5 * 60 * 1000 || (conv.demandType && conv.demandType !== "outro")) {
     return { level: "media", label: "M\u00e9dia", cls: "pb-media" };
   }
-  return { level: "baixa", label: "Baixa", cls: "" };
+  return { level: "nenhuma", label: "Sem classifica\u00e7\u00e3o", cls: "" };
 }
 
 function initials(name) {
@@ -3505,6 +3505,7 @@ async function loadQueue() {
     const data = await res.json();
     console.log("[loadQueue] conversations:", (data.conversations||[]).length);
     allConvs   = data.conversations || [];
+    Object.assign(_colOrder, data.pipelineOrder || {});
     console.log("[loadQueue] before renderPipeline, __onboardingActive:", window.__onboardingActive);
     if (!window.__onboardingActive) {
       renderPipeline(allConvs);
@@ -3633,8 +3634,8 @@ function renderPipelineTab(tabId, cols, convs) {
     const cards = byCol[col.key] || [];
     // Ordena por prioridade (crítica primeiro) e depois por tempo de espera
     cards.sort((a, b) => {
-      if (_colOrder[col.key]?.length) {
-        const order = _colOrder[col.key];
+      if (_colOrder[tabId + ":" + col.key]?.length) {
+        const order = _colOrder[tabId + ":" + col.key];
         const ia = order.indexOf(a.phone), ib = order.indexOf(b.phone);
         if (ia !== -1 || ib !== -1) {
           if (ia === -1) return 1; if (ib === -1) return -1; return ia - ib;
@@ -3699,7 +3700,7 @@ function renderPipelineTab(tabId, cols, convs) {
         const rawSiblings = allConvs
           .filter(c => (c.pipelineStatus || "novo") === targetKey && c.status !== "resolvido" && c.phone !== phone);
         // Respeita a ordem visual/_colOrder atual antes de calcular o índice de inserção
-        const existingOrder = _colOrder[targetKey];
+        const existingOrder = _colOrder[tabId + ":" + targetKey];
         if (existingOrder?.length) {
           rawSiblings.sort((a, b) => {
             const ia = existingOrder.indexOf(a.phone);
@@ -3714,10 +3715,15 @@ function renderPipelineTab(tabId, cols, convs) {
         const insertIdx = _dragInsertAfter ? siblings.indexOf(_dragInsertAfter) + 1 : 0;
         const newOrder = [...siblings];
         newOrder.splice(Math.max(0, insertIdx), 0, phone);
-        _colOrder[targetKey] = newOrder;
+        _colOrder[tabId + ":" + targetKey] = newOrder;
         _dragInsertAfter = null;
         cardsEl.querySelector(".drag-line")?.remove();
         renderPipeline(allConvs);
+        fetch("/api/update-card", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "updatePipelineOrder", clientType: tabId, columnKey: targetKey, order: newOrder }),
+        }).catch(() => {});
         return;
       }
       if (isResolvedCol) {
@@ -3825,8 +3831,8 @@ function buildCard(c, col, cols) {
     role="button" tabindex="0"
     data-phone="${esc(c.phone)}"
     onclick="event.stopPropagation();openPriorityPicker(event,'${esc(c.phone)}')"
-    title="Clique para alterar prioridade"
-  >${priority.level !== 'baixa' ? priority.label + ' ▾' : '···'}</span>`;
+    title="${priority.level === 'nenhuma' ? 'Sem classificação — clique para classificar' : 'Clique para alterar prioridade'}"
+  >${priority.level === 'nenhuma' ? 'Classificar ▾' : priority.label + ' ▾'}</span>`;
 
   // Chip de atendente ativo — exibe somente se for outro atendente e o registro for fresco
   const _cardAtt = c.activeAttendant || null;
@@ -3862,6 +3868,7 @@ function buildCard(c, col, cols) {
       <div class="card-title" contenteditable="true" data-phone="${esc(c.phone)}"
         onblur="saveCardField(this,'cardTitle')"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+        data-placeholder="${esc(!cardTitle ? (resumoOperacional(c) || 'Resumo do pedido...') : '')}"
         title="${cardTitle ? esc(cardTitle) + ' — clique para editar' : 'Clique para adicionar resumo do pedido'}">${esc(cardTitle)}</div>
     </div>
 
