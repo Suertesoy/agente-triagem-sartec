@@ -64,7 +64,7 @@ export default async function handler(req, res) {
         cursor, "MATCH", "sartec:*", "COUNT", 200
       );
       cursor = nextCursor;
-      allKeys.push(...found);
+      allKeys.push(...found.filter(k => !k.includes(":contact:") && k !== "sartec:pipelineOrder"));
     } while (cursor !== "0");
 
     if (!allKeys.length) {

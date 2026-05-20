@@ -778,6 +778,7 @@
     .toast.t-ok   { border-left: 3px solid #10b981; }
     .toast.t-err  { border-left: 3px solid #ef4444; }
     .toast.t-undo { border-left: 3px solid #f59e0b; }
+    .toast.t-warn { border-left: 3px solid #f59e0b; }
     .toast-undo-btn {
       background: rgba(255,255,255,.14);
       border: 1px solid rgba(255,255,255,.25);
@@ -4869,7 +4870,8 @@ async function sendMessage(prefix) {
   const windowBar = document.getElementById(`${prefix}-window-bar`);
   if (windowBar) {
     if (windowBar.classList.contains("ws-closed") || windowBar.classList.contains("ws-waiting")) {
-      return; // Silenciosamente bloqueado — o lock visual já informa o motivo
+      showToast("Janela fechada — use um template para retomar", "t-warn");
+      return;
     }
   }
   // ──────────────────────────────────────────────────────────────────────────
