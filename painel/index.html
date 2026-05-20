@@ -6123,7 +6123,7 @@ function renderMobStageCards(tabId, stage) {
     return;
   }
   cards
-    .sort(function(a,b){ return (PRIORITY_ORDER[computePriority(a).level]||3)-(PRIORITY_ORDER[computePriority(b).level]||3); })
+    .sort(function(a,b){ return (PRIORITY_ORDER[computePriority(a).level]??3)-(PRIORITY_ORDER[computePriority(b).level]??3); })
     .forEach(function(cv){ container.appendChild(buildCard(cv, col, cols)); });
 }
 
