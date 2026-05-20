@@ -602,8 +602,12 @@ function generateCardTitle(session) {
   return `${prefix} — ${titled}`;
 }
 
-function addMessage(session, role, content) {
-  session.history.push({ role, content });
+function addMessage(session, role, content, meta = {}) {
+  const item = { role, content };
+  if (meta.metaMessageId) item.metaMessageId = meta.metaMessageId;
+  if (meta.replyToMsgId)  item.replyToMsgId  = meta.replyToMsgId;
+  if (meta.replyToFrom)   item.replyToFrom   = meta.replyToFrom;
+  session.history.push(item);
 
   if (role === "assistant" && isHandoff(content)) {
     session.handoffDone = true;
@@ -675,7 +679,7 @@ async function downloadMedia(mediaId) {
 // AGENTE
 // ============================================================
 
-async function chatWithAgent(phone, userText, mediaPayload = null, name = "") {
+async function chatWithAgent(phone, userText, mediaPayload = null, name = "", meta = {}) {
   return withSessionLock(getRedis(), phone, async () => {
   const session  = await loadSession(phone);
 
@@ -723,7 +727,7 @@ async function chatWithAgent(phone, userText, mediaPayload = null, name = "") {
         ]
       : userText;
 
-    addMessage(session, "user", userContent);
+    addMessage(session, "user", userContent, meta);
     await saveSession(phone, session);
     return null; // Encerra sem chamar Claude e sem resposta automática
   }
@@ -745,7 +749,7 @@ async function chatWithAgent(phone, userText, mediaPayload = null, name = "") {
 
   if (decision === "post_handoff_default") {
     const reply = "Nossa equipe já está ciente e vai te atender em breve 🤝";
-    addMessage(session, "user",      textToCheck || "[mensagem]");
+    addMessage(session, "user",      textToCheck || "[mensagem]", meta);
     addMessage(session, "assistant", reply);
     session.postHandoffReplySent = true;
     await saveSession(phone, session);
@@ -772,7 +776,7 @@ async function chatWithAgent(phone, userText, mediaPayload = null, name = "") {
       ]
     : userText;
 
-  addMessage(session, "user", userContent);
+  addMessage(session, "user", userContent, meta);
 
   console.log(`[Agente] 🤖 +${phone} | ${getMessages(session).length} msgs`);
 
@@ -949,6 +953,11 @@ async function handleIncomingMessage(req, res) {
           const from = message.from;
           const type = message.type;
           const name = value.contacts?.find((c) => c.wa_id === from)?.profile?.name ?? "—";
+          const msgMeta = {
+            metaMessageId: message.id            || null,
+            replyToMsgId:  message.context?.id   || null,
+            replyToFrom:   message.context?.from  || null,
+          };
 
           console.log(`[Msg] +${from} (${name}) tipo: ${type}`);
 
@@ -976,7 +985,7 @@ async function handleIncomingMessage(req, res) {
                   if (!session.pipelineStatus || session.pipelineStatus === "finalizado" || session.pipelineStatus === "entregue") {
                     session.pipelineStatus = "em_atendimento";
                   }
-                  addMessage(session, "user", "[áudio]");
+                  addMessage(session, "user", "[áudio]", msgMeta);
                   await saveSession(from, session);
                   return null; // Silêncio total
                 }
@@ -1010,7 +1019,7 @@ async function handleIncomingMessage(req, res) {
             try {
               const media   = await downloadMedia(message.image.id);
               const caption = message.image.caption || "";
-              const reply   = await chatWithAgent(from, caption || "O cliente enviou uma imagem.", media, name);
+              const reply   = await chatWithAgent(from, caption || "O cliente enviou uma imagem.", media, name, msgMeta);
               if (reply) await sendTextMessage(from, reply);
             } catch (err) {
               console.error("[Imagem] ❌", err.message);
@@ -1023,7 +1032,7 @@ async function handleIncomingMessage(req, res) {
           if (type === "document" && message.document?.mime_type === "application/pdf") {
             try {
               const media = await downloadMedia(message.document.id);
-              const reply = await chatWithAgent(from, "O cliente enviou um PDF.", media, name);
+              const reply = await chatWithAgent(from, "O cliente enviou um PDF.", media, name, msgMeta);
               if (reply) await sendTextMessage(from, reply);
             } catch (err) {
               console.error("[PDF] ❌", err.message);
@@ -1080,7 +1089,7 @@ async function handleIncomingMessage(req, res) {
 
             let reply;
             try {
-              reply = await chatWithAgent(from, text, null, name);
+              reply = await chatWithAgent(from, text, null, name, msgMeta);
             } catch (err) {
               console.error("[Agente] ❌", err.message);
               reply = "Desculpe, tive um problema técnico. Nossa equipe vai te atender em breve 🤝";

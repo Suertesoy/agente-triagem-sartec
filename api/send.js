@@ -101,7 +101,8 @@ async function sendText(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     });
   }
 
-  console.log(`[send/text] ✅ ID: ${metaData?.messages?.[0]?.id}`);
+  const metaMessageId = metaData?.messages?.[0]?.id || null;
+  console.log(`[send/text] ✅ ID: ${metaMessageId}`);
 
   await saveToHistory(to, {
     role: "assistant",
@@ -109,6 +110,7 @@ async function sendText(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     sentByHuman:   true,
     attendantId:   body.attendantId   || null,
     attendantName: body.attendantName || null,
+    metaMessageId,
   });
 
   return res.status(200).json({ success: true });
@@ -184,7 +186,8 @@ async function sendImage(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     });
   }
 
-  console.log(`[send/image] ✅ ID: ${metaData?.messages?.[0]?.id}`);
+  const metaMessageId = metaData?.messages?.[0]?.id || null;
+  console.log(`[send/image] ✅ ID: ${metaMessageId}`);
 
   // 3. Salva no histórico com a referência da mídia
   await saveToHistory(to, {
@@ -196,6 +199,7 @@ async function sendImage(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     mediaMimeType: mimeType,
     attendantId:   body.attendantId   || null,
     attendantName: body.attendantName || null,
+    metaMessageId,
   });
 
   return res.status(200).json({ success: true });
@@ -271,7 +275,8 @@ async function sendDocument(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     });
   }
 
-  console.log(`[send/document] ✅ ID: ${metaData?.messages?.[0]?.id}`);
+  const metaMessageId = metaData?.messages?.[0]?.id || null;
+  console.log(`[send/document] ✅ ID: ${metaMessageId}`);
 
   // 3. Salva no histórico com base64 para exibição no painel
   await saveToHistory(to, {
@@ -284,6 +289,7 @@ async function sendDocument(req, res, body, PHONE_NUMBER_ID, ACCESS_TOKEN) {
     mediaFilename: filename,
     attendantId:   body.attendantId   || null,
     attendantName: body.attendantName || null,
+    metaMessageId,
   });
 
   return res.status(200).json({ success: true });

@@ -110,6 +110,10 @@ export default async function handler(req, res) {
         attendantName: m.attendantName || null,
       };
 
+      if (m.metaMessageId) item.metaMessageId = m.metaMessageId;
+      if (m.replyToMsgId)  item.replyToMsgId  = m.replyToMsgId;
+      if (m.replyToFrom)   item.replyToFrom   = m.replyToFrom;
+
       if (mediaType) {
         item.mediaType     = mediaType;
         item.mediaData     = mediaData;
