@@ -91,10 +91,11 @@ export default async function handler(req, res) {
       if (search && !clientName.toLowerCase().includes(search) && !phone.includes(search)) continue;
 
       const lastMsg = [...(session.history || [])].reverse().find((m) => m.role === "user");
-      const lastMessage =
+      let lastMessage =
         typeof lastMsg?.content === "string"
           ? lastMsg.content
           : (session.proactiveNote || "[mídia]");   // nota de template proativo
+      if (lastMessage === "[áudio]") lastMessage = "Áudio recebido";
 
       const lastActivity =
         session.lastActivityAt || session.handoffAt || session.lastDate || null;

@@ -108,10 +108,11 @@ export default async function handler(req, res) {
       const lastUserMsg = [...(session.history || [])]
         .reverse()
         .find((m) => m.role === "user");
-      const lastMessage =
+      let lastMessage =
         typeof lastUserMsg?.content === "string"
           ? lastUserMsg.content
           : "[mídia]";
+      if (lastMessage === "[áudio]") lastMessage = "Áudio recebido";
 
       const clientType =
         session.clientType ||
