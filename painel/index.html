@@ -408,7 +408,6 @@
       display: flex;
       flex-direction: column;
       min-height: 186px;
-      animation: card-enter .22s ease;
       cursor: pointer;
     }
     .card:hover { box-shadow: 0 2px 6px rgba(15,23,42,.07), 0 8px 20px rgba(15,23,42,.10); transform: translateY(-2px); }
@@ -3937,6 +3936,11 @@ function buildCard(c, col, cols) {
     if (_dragPhone) return; // ignora click após drag
     openChat(c.phone);
   });
+
+  // Animação de entrada apenas para cards genuinamente novos (não existiam no render anterior)
+  if (!knownPhones.has(c.phone)) {
+    card.style.animation = "card-enter .22s ease";
+  }
 
   return card;
 }
