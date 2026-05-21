@@ -1405,6 +1405,13 @@
     }
     .new-msgs-divider:hover { background: #dbeafe; }
     .bubble-new-other { outline: 1.5px solid rgba(59,130,246,.35); outline-offset: 3px; }
+    .bubble-quote {
+      font-size: .68rem; line-height: 1.35; opacity: .72;
+      border-left: 2px solid currentColor;
+      padding: 2px 6px; margin-bottom: 5px;
+      max-width: 100%; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
     .conv-new-badge {
       font-size: .55rem; font-weight: 700; background: #3b82f6; color: #fff;
       padding: 1px 5px; border-radius: 20px; margin-left: 5px; vertical-align: middle;
@@ -4221,7 +4228,7 @@ function renderModal(data) {
 
   container.innerHTML = "";
   for (let i = 0; i < prevCount && i < history.length; i++) {
-    appendBubble(container, history[i]);
+    appendBubble(container, history[i], false, history);
   }
   if (hasNewFromOther && !atBottom && newMsgs.length > 0) {
     const divider = document.createElement("div");
@@ -4231,7 +4238,7 @@ function renderModal(data) {
     container.appendChild(divider);
   }
   for (let i = prevCount; i < history.length; i++) {
-    appendBubble(container, history[i]);
+    appendBubble(container, history[i], false, history);
     if (hasNewFromOther && history[i].sentByHuman &&
         history[i].attendantId && history[i].attendantId !== currentAtt?.id) {
       const lastBubble = container.querySelector(".bubble-wrap:last-child .bubble");
@@ -4499,7 +4506,7 @@ function renderConvsChat(data) {
     .map(el => ({ content: el.dataset.content, mediaType: el.dataset.mediaType || null }));
 
   container.innerHTML = "";
-  for (const msg of data.history || []) appendBubble(container, msg);
+  for (const msg of data.history || []) appendBubble(container, msg, false, data.history);
 
   const serverContents = new Set(
     (data.history || []).filter(m => m.sentByHuman).map(m => m.content)
@@ -4602,7 +4609,21 @@ async function saveCardData(prefix) {
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  BOLHAS DE MENSAGEM                                          ║
 // ╚══════════════════════════════════════════════════════════════╝
-function appendBubble(container, msg, optimistic = false) {
+function getQuotedPreview(msg, history) {
+  if (!msg?.replyToMsgId || !Array.isArray(history)) return "";
+  const quoted = history.find(m => m.metaMessageId === msg.replyToMsgId);
+  if (!quoted) return "Mensagem anterior";
+  if (typeof quoted.content === "string" && quoted.content.trim()) {
+    return quoted.content.trim().slice(0, 90);
+  }
+  if (Array.isArray(quoted.content)) {
+    const textPart = quoted.content.find(c => c.type === "text");
+    if (textPart?.text?.trim()) return textPart.text.trim().slice(0, 90);
+  }
+  return "[mídia]";
+}
+
+function appendBubble(container, msg, optimistic = false, history = null) {
   const { role, content, sentByHuman, mediaType, mediaData, mediaMimeType, mediaFilename,
           attendantId, attendantName } = msg;
 
@@ -4619,6 +4640,15 @@ function appendBubble(container, msg, optimistic = false) {
   if (optimistic) {
     bubble.dataset.content   = content || "";
     bubble.dataset.mediaType = mediaType || "";
+  }
+
+  // ── Reply quote ──
+  const _quoteText = getQuotedPreview(msg, history);
+  if (_quoteText) {
+    const _quoteEl = document.createElement("div");
+    _quoteEl.className = "bubble-quote";
+    _quoteEl.textContent = "↩ " + _quoteText;
+    bubble.appendChild(_quoteEl);
   }
 
   // ── Imagem ──
