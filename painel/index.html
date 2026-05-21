@@ -2521,7 +2521,7 @@
     }
     .card-open-hint:hover { background: var(--brand-navy-mid); opacity: .94; }
 
-    /* ── Círculo de status no topo direito do card ── */
+    /* ── Círculo de prioridade — controle clicável no topo direito ── */
     .card-status-dot {
       position: absolute;
       top: 12px;
@@ -2532,14 +2532,16 @@
       background: #d1d5db;
       border: 2px solid rgba(0,0,0,.12);
       box-shadow: 0 1px 4px rgba(0,0,0,.12);
-      pointer-events: none;
+      cursor: pointer;
       z-index: 3;
-      flex-shrink: 0;
+      transition: box-shadow .15s, transform .12s;
     }
+    .card-status-dot:hover { box-shadow: 0 2px 10px rgba(0,0,0,.22); transform: scale(1.10); }
+    .card.resolvido .card-status-dot { cursor: default; }
     .card.pri-alta .card-status-dot           { background: #f87171; border-color: #dc2626; box-shadow: 0 1px 6px rgba(220,38,38,.30); }
     .card.pri-media .card-status-dot          { background: #fbbf24; border-color: #d97706; box-shadow: 0 1px 6px rgba(217,119,6,.28); }
     .card.card-finalizado .card-status-dot    { background: #4ade80; border-color: #16a34a; box-shadow: 0 1px 6px rgba(22,163,74,.28); }
-    .card.resolvido .card-status-dot          { background: #9ca3af; border-color: #6b7280; }
+    .card.resolvido .card-status-dot          { background: #9ca3af; border-color: #6b7280; box-shadow: none; }
 
     /* ── Gradiente de janela fechada — não bloqueia cliques ── */
     .card-window-closed::after {
@@ -3946,7 +3948,14 @@ function buildCard(c, col, cols) {
     : "";
 
   card.innerHTML = `
-    <span class="card-status-dot"></span>
+    <span class="card-status-dot"
+      role="button"
+      tabindex="0"
+      data-phone="${esc(c.phone)}"
+      onclick="event.stopPropagation();openPriorityPicker(event,'${esc(c.phone)}')"
+      title="${!isManual ? 'Definir prioridade' : 'Prioridade: ' + priority.label + ' — clique para alterar'}"
+      aria-label="Prioridade: ${!isManual ? 'sem classificação' : priority.label}"
+    ></span>
 
     <div class="card-zone-top">
       <div class="card-zone-top-row">
@@ -3956,7 +3965,6 @@ function buildCard(c, col, cols) {
           onblur="saveCardField(this,'clientName')"
           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
           title="${esc(c.clientName)} — clique para editar">${esc(c.clientName)}</span>
-        ${priBadge}
         ${isIncomplete ? `<span class="badge-triagem">Triagem ⚠️</span>` : ""}
       </div>
       ${attendantChip}
@@ -6345,7 +6353,7 @@ const OB_STEPS = [
   { sel: ".top-header",        title: "Painel de atendimento",  text: "Acompanhe todos os atendimentos ativos. O contador mostra quem está aguardando e as métricas de janela WhatsApp." },
   { sel: ".pipeline-wrap",     title: "Fluxo de atendimento",   text: "Cada coluna é uma etapa. Arraste os cards para avançar. A cor indica a urgência operacional." },
   { sel: ".card",              title: "Card de cliente",        text: "Cada card é um cliente. Vermelho = atenção, amarelo = acompanhamento, verde = finalizando, branco = normal." },
-  { sel: ".priority-dot",      title: "Prioridade manual",      text: "Clique para definir urgência: Alta, Média, Baixa ou Concluindo. Sobrepõe a prioridade automática." },
+  { sel: ".card-status-dot",   title: "Prioridade manual",      text: "Clique no círculo colorido para definir urgência: Alta, Média, Baixa ou Concluindo. A cor do card e do círculo indicam o estado." },
   { sel: ".card-open-hint",    title: "Abrir atendimento",      text: "Acesse o histórico completo, envie mensagens e use templates WhatsApp." },
   { sel: ".card-expand-btn",   title: "Detalhes rápidos",       text: "Expanda para ver o resumo operacional e os dados do pedido sem sair do Kanban." },
   { sel: ".btn-resolve-inline",title: "Resolver atendimento",   text: "Quando concluído, resolva para arquivar e liberar a fila de atendimento." },
