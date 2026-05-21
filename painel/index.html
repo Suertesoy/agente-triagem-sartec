@@ -2384,6 +2384,7 @@
       display: flex;
       align-items: center;
       gap: 5px;
+      padding-right: 22px;
     }
     .card-zone-time-row {
       display: flex;
@@ -2392,13 +2393,16 @@
       padding-left: 2px;
     }
     .card-zone-mid {
-      background: transparent;
-      border-left: none;
-      border-radius: 0;
-      padding: 3px 0;
-      margin: 3px 0 7px;
-      flex: 1;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 8px;
+      padding: 6px 9px;
+      margin: 5px 0;
+      min-height: 36px;
     }
+    .card.pri-alta .card-zone-mid        { background: rgba(255,255,255,.62); }
+    .card.pri-media .card-zone-mid       { background: rgba(255,255,255,.62); }
+    .card.card-finalizado .card-zone-mid { background: rgba(255,255,255,.52); }
     .card-zone-footer {
       display: flex;
       flex-direction: column;
@@ -2496,26 +2500,89 @@
       letter-spacing: .03em;
     }
 
-    /* ── "Abrir conversa" — ação secundária discreta ── */
+    /* ── Botão principal do card — CTA azul full-width ── */
     .card-open-hint {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      align-self: stretch;
       justify-content: center;
-      gap: 4px;
-      font-size: .65rem;
-      font-weight: 600;
-      color: var(--brand-navy);
-      background: rgba(26,42,94,.06);
-      border: 1px solid rgba(26,42,94,.14);
-      border-radius: 6px;
-      padding: 5px 10px;
+      width: 100%;
+      font-size: .72rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--brand-navy);
+      border: none;
+      border-radius: 8px;
+      padding: 9px 12px;
       cursor: pointer;
-      letter-spacing: .01em;
-      opacity: 1;
-      transition: background .15s, border-color .15s, color .15s;
+      letter-spacing: .02em;
+      transition: background .15s, opacity .15s;
+      white-space: nowrap;
     }
-    .card-open-hint:hover { background: rgba(26,42,94,.12); border-color: rgba(26,42,94,.26); color: var(--brand-navy-mid); }
+    .card-open-hint:hover { background: var(--brand-navy-mid); opacity: .92; }
+
+    /* ── Círculo de status no topo direito do card ── */
+    .card-status-dot {
+      position: absolute;
+      top: 13px;
+      right: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      border: 1.5px solid rgba(0,0,0,.14);
+      pointer-events: none;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    .card.pri-alta .card-status-dot           { background: #f87171; border-color: #ef4444; }
+    .card.pri-media .card-status-dot          { background: #fbbf24; border-color: #f59e0b; }
+    .card.card-finalizado .card-status-dot    { background: #4ade80; border-color: #22c55e; }
+    .card.resolvido .card-status-dot          { background: #9ca3af; border-color: #6b7280; }
+
+    /* ── Gradiente de janela fechada — não bloqueia cliques ── */
+    .card-window-closed::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 58px;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,.16));
+      border-radius: 0 0 14px 14px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .card-window-closed > *:not(.card-status-dot) { position: relative; z-index: 2; }
+
+    /* ── Linha de categoria: select + engrenagem + tempo ── */
+    .card-cat-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 4px 0 5px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    .card-win-time {
+      font-size: .59rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    /* ── Linha de ação principal (CTA) ── */
+    .card-cta-row { margin: 3px 0 4px; }
+
+    /* ── Linha de rodapé: PF/PJ + Finalizar + Expandir ── */
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding-top: 4px;
+      border-top: 1px solid rgba(0,0,0,.05);
+    }
+    .card-footer-row .card-expand-btn { margin-left: auto; }
+    .card-footer-row .btn-resolve-inline { margin-left: 0; }
 
     /* ── Resumo operacional — expand do card ── */
     .card-expand-summary {
@@ -3208,6 +3275,18 @@ function windowStatusLabel(c) {
   return `<span class="card-window-status ws-closed">Janela fechada</span>`;
 }
 
+// ── Tempo compacto da janela WhatsApp para o card ────────────────────────
+function cardWindowTimeText(c) {
+  const ws = c.conversationWindowStatus;
+  if (ws === "open" && c.windowRemainingMs > 0) {
+    const h = Math.floor(c.windowRemainingMs / 3_600_000);
+    const m = Math.floor((c.windowRemainingMs % 3_600_000) / 60_000);
+    return `⏳ ${h}h${String(m).padStart(2,"0")}`;
+  }
+  if (ws === "waiting_template_reply") return `⏳ Aguardando`;
+  return `⏳ 00'00"`;
+}
+
 // ── Resumo operacional por heurísticas ───────────────────────────────────
 const _USELESS_MSG = /^(ok|oks|okay|obrigad\w*|obg|valeu|vlw|beleza|blz|tudo bem|td bem|tdbm|sim|não|nao|talvez|pode|certo|entendi|legal|\s|👍|✅|👌|😊|😁|🙏|⁠)+\.?$/iu;
 
@@ -3808,6 +3887,8 @@ function buildCard(c, col, cols) {
   }
 
   if (isIncomplete) cls += " triagem_incompleta";
+  const isWindowClosed = !isResolved && (c.conversationWindowStatus !== "open" || c.windowRemainingMs <= 0);
+  if (isWindowClosed) cls += " card-window-closed";
   card.className = cls;
 
   const colsForStatus = cols.filter(col => !col.resolved);
@@ -3834,15 +3915,10 @@ function buildCard(c, col, cols) {
     : "";
 
   card.innerHTML = `
+    <span class="card-status-dot"></span>
+
     <div class="card-zone-top">
       <div class="card-zone-top-row">
-        <select class="type-select-top ${clientType}"
-          onchange="changeClientType(this,'${esc(c.phone)}')"
-          onclick="event.stopPropagation()"
-          title="${clientType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"} — clique para alterar">
-          <option value="pf"${clientType==="pf"?" selected":""}>PF</option>
-          <option value="pj"${clientType==="pj"?" selected":""}>PJ</option>
-        </select>
         <span class="card-name" contenteditable="true" data-phone="${esc(c.phone)}"
           onclick="event.stopPropagation()"
           onblur="saveCardField(this,'clientName')"
@@ -3863,32 +3939,45 @@ function buildCard(c, col, cols) {
         title="${cardTitle ? esc(cardTitle) + ' — clique para editar' : 'Clique para adicionar resumo do pedido'}">${esc(cardTitle)}</div>
     </div>
 
+    <div class="card-cat-row" onclick="event.stopPropagation()">
+      <select class="demand-select ${demandClass(c.demandType)}"
+        data-phone="${esc(c.phone)}"
+        onchange="saveDemandType(this)" onclick="event.stopPropagation()" title="Tipo de demanda">
+        ${Object.entries(getCategories()).map(([k,v]) =>
+          `<option value="${k}"${k===c.demandType?" selected":""}>${v}</option>`
+        ).join("")}
+      </select>
+      <button class="btn-cat-mgr" onclick="event.stopPropagation();openCatManager()" title="Gerenciar categorias">⚙️</button>
+      <span class="card-win-time">${cardWindowTimeText(c)}</span>
+    </div>
+
+    <div class="card-cta-row" onclick="event.stopPropagation()">
+      ${isResolved
+        ? `<button class="btn-reopen" onclick="reopenCard('${esc(c.phone)}','${clientType}')" style="width:100%">&#8635; Reabrir</button>`
+        : `<button class="card-open-hint" type="button"
+             onclick="event.stopPropagation();openChat('${esc(c.phone)}')"
+             >${isWindowClosed ? "Reabrir janela de atendimento →" : "Abrir →"}</button>`
+      }
+    </div>
+
     <div class="card-zone-footer" onclick="event.stopPropagation()">
-      <div class="card-zone-footer-meta">
-        ${windowStatusLabel(c)}
-        <select class="demand-select ${demandClass(c.demandType)}"
-          data-phone="${esc(c.phone)}"
-          onchange="saveDemandType(this)" onclick="event.stopPropagation()" title="Tipo de demanda">
-          ${Object.entries(getCategories()).map(([k,v]) =>
-            `<option value="${k}"${k===c.demandType?" selected":""}>${v}</option>`
-          ).join("")}
+      <div class="card-footer-row">
+        <select class="type-select-top ${clientType}"
+          onchange="changeClientType(this,'${esc(c.phone)}')"
+          onclick="event.stopPropagation()"
+          title="${clientType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"} — clique para alterar">
+          <option value="pf"${clientType==="pf"?" selected":""}>PF</option>
+          <option value="pj"${clientType==="pj"?" selected":""}>PJ</option>
         </select>
-        <button class="btn-cat-mgr" onclick="event.stopPropagation();openCatManager()" title="Gerenciar categorias">⚙️</button>
-        ${isIncomplete ? `<span class="tag-sem-resp">Sem resposta</span>` : ""}
+        ${!isResolved ? `<button class="btn-resolve-inline"
+            onclick="event.stopPropagation();quickResolveCard('${esc(c.phone)}')"
+            title="Resolver atendimento">✓ Finalizar</button>` : ""}
         <button class="card-expand-btn"
           onclick="event.stopPropagation();toggleCardExpand(event,'${esc(c.phone)}')"
           title="${_expandedCards.has(c.phone) ? 'Ocultar detalhes' : 'Ver detalhes'}">${_expandedCards.has(c.phone) ? "▲ Ocultar" : "▼ Detalhes"}</button>
       </div>
       ${buildExpandBody(c, clientType)}
-      ${isResolved && c.resolvedAt ? `<div style="font-size:.61rem;color:var(--text-muted);text-align:center;padding-top:2px">Resolvido ${relTime(c.resolvedAt)}</div>` : ""}
-      ${isResolved
-        ? `<button class="btn-reopen" onclick="reopenCard('${esc(c.phone)}','${clientType}')" style="width:100%;margin-top:4px">&#8635; Reabrir</button>`
-        : ""
-      }
-      ${!isResolved ? `<div class="card-actions-row">
-        <button class="card-open-hint" type="button" onclick="openChat('${esc(c.phone)}')">Abrir conversa →</button>
-        <button class="btn-resolve-inline" onclick="event.stopPropagation();quickResolveCard('${esc(c.phone)}')" title="Resolver atendimento">✓ Resolver</button>
-      </div>` : ""}
+      ${isResolved && c.resolvedAt ? `<div style="font-size:.61rem;color:var(--text-muted);text-align:center;padding-top:4px">Resolvido ${relTime(c.resolvedAt)}</div>` : ""}
     </div>
   `;
 
