@@ -2588,31 +2588,36 @@
     /* ── Linha de ação principal (CTA) ── */
     .card-cta-row { margin: 8px 0 6px; }
 
-    /* ── Toggle PF/PJ ── */
+    /* ── Toggle PF/PJ — switch segmentado ── */
     .pf-pj-toggle {
       display: inline-flex;
-      background: rgba(0,0,0,.07);
-      border-radius: 20px;
-      padding: 2px;
-      gap: 1px;
+      background: rgba(0,0,0,.10);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 0;
       flex-shrink: 0;
     }
     .pftgl-btn {
-      font-size: .54rem;
+      font-size: .56rem;
       font-weight: 800;
-      padding: 3px 9px;
-      border-radius: 16px;
+      padding: 4px 11px;
+      border-radius: 999px;
       border: none;
       background: transparent;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: .05em;
-      transition: background .12s, color .12s;
+      letter-spacing: .04em;
+      transition: background .15s, color .15s, box-shadow .15s;
       white-space: nowrap;
+      line-height: 1;
     }
-    .pftgl-btn.active        { background: var(--brand-navy); color: #fff; }
-    .pftgl-btn:not(.active):hover { background: rgba(26,42,94,.14); color: var(--text-primary); }
+    .pftgl-btn.active {
+      background: var(--brand-navy);
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.22);
+    }
+    .pftgl-btn:not(.active):hover { background: rgba(26,42,94,.12); color: var(--text-primary); }
 
     /* ── Linha de rodapé: toggle + Finalizar centralizado + seta ── */
     .card-footer-row {
@@ -4181,6 +4186,14 @@ async function changeStatus(select, phone, clientType) {
 }
 
 function changeClientTypeToggle(phone, newType) {
+  const conv = allConvs.find(c => c.phone === phone);
+  const current = conv?.clientType || "pf";
+  if (newType === current) return;
+  const destLabel = newType === "pj" ? "pessoas jurídicas" : "pessoas físicas";
+  const ok = window.confirm(
+    `Tem certeza que deseja enviar este atendimento para o painel de ${destLabel}?\nEle sairá deste painel após a confirmação.`
+  );
+  if (!ok) return;
   changeClientType({ value: newType }, phone);
 }
 
