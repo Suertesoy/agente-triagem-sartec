@@ -20,7 +20,7 @@ function getRedis() {
 }
 
 const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
-const INATIVO_MS  = 24 * 60 * 60 * 1000; // 24h sem atividade
+const INATIVO_MS  = 2 * 60 * 60 * 1000;  // 2h sem atividade
 
 // Janela de 24h
 function computeWindowInfo(session) {
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       const status     = session.status || "ativo";
 
       // ── Marcação lazy de triagem_incompleta ──
-      // Sessões ativas (sem handoff, sem resolução) paradas há >24h
+      // Sessões ativas (sem handoff, sem resolução) paradas há >2h
       if (status === "ativo" && !session.handoffDone) {
         const lastAct = session.lastActivityAt
           ? new Date(session.lastActivityAt).getTime()
