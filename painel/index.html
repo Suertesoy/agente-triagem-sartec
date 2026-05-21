@@ -2682,6 +2682,13 @@
       .btn-camera { width:42px;height:42px; }
       .btn-send { height:42px;min-width:60px; }
       .composer-row textarea { min-height:42px; }
+      /* Previne zoom automático do iOS em campos com font-size < 16px */
+      .composer-row textarea,
+      .caption-input,
+      .qr-input,
+      .tmpl-var-row input,
+      .ncm-field input,
+      .ncm-field select { font-size: 1rem; }
     }
   </style>
 </head>
@@ -4268,6 +4275,7 @@ function closeModal() {
   _chatPollId = null;
   unlockConvTab(openModalPhone);
   openModalPhone = null;
+  document.activeElement?.blur();
   document.getElementById("chat-modal").classList.add("hidden");
   document.body.style.overflow = "";
   clearImage("modal");
