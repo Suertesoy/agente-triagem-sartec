@@ -4109,9 +4109,11 @@ async function refreshModal() {
     // Registrar como atendente ativo apenas se ninguém (ou o próprio usuário) já estiver ativo
     if (!_aaRegistered) {
       _aaRegistered = true;
-      if (canTouchActiveAttendant(data)) {
+      if (canTouchActiveAttendant(data, openModalPhone)) {
         touchActiveAttendant(openModalPhone);
         startActiveAttendantRenewal(openModalPhone);
+      } else if (openModalPhone) {
+        observerOnlyPhones.add(openModalPhone);  // marcar como observador nesta sessão
       }
     }
 
@@ -4456,7 +4458,7 @@ async function openConvsChat(phone, redisKey, isArchive) {
   if (isConvLockedByOther(phone)) showDupeWarning("convs");
   lockConvTab(phone);
 
-  if (!isArchive) touchActiveAttendant(phone);
+  _aaRegisteredConvs = false;  // decisão será tomada após carregar dados
 
   delete _lastMsgCountByPhone[phone];
   await refreshConvsChat(phone, openConvsRedisKey);
@@ -4473,6 +4475,17 @@ async function refreshConvsChat(phone, redisKey) {
       : `/api/conversation?phone=${phone}`;
     const res  = await fetch(url);
     const data = await res.json();
+
+    // Registrar como atendente ativo na aba Conversas — mesma lógica segura do modal
+    if (!_aaRegisteredConvs && !rk?.includes(":archive:")) {
+      _aaRegisteredConvs = true;
+      if (canTouchActiveAttendant(data, phone)) {
+        touchActiveAttendant(phone);
+      } else if (phone) {
+        observerOnlyPhones.add(phone);
+      }
+    }
+
     renderConvsChat(data);
   } catch (e) { console.error("[refreshConvsChat]", e); }
 }
@@ -6356,9 +6369,11 @@ function clearConvHasNew(phone) {
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  ATENDENTE ATIVO — AVISO OPERACIONAL                         ║
 // ╚══════════════════════════════════════════════════════════════╝
-let _aaIntervalId = null;
-let _aaRegistered = false;  // true quando o usuário atual foi registrado como ativo nesta conversa
-let _chatPollId   = null;
+let _aaIntervalId      = null;
+let _aaRegistered      = false;  // true quando modal principal registrou (ou decidiu não registrar)
+let _aaRegisteredConvs = false;  // equivalente para aba Conversas
+const observerOnlyPhones = new Set(); // phones abertos como observador nesta sessão do navegador
+let _chatPollId        = null;
 const _lastMsgCountByPhone = {};
 
 function isActiveAttendantFresh(activeAttendantAt) {
@@ -6386,9 +6401,10 @@ function renderActiveAttendantNotice(prefix, data) {
   }
 }
 
-function canTouchActiveAttendant(data) {
+function canTouchActiveAttendant(data, phone) {
   const current = getCurrentAttendant();
   if (!current) return false;
+  if (phone && observerOnlyPhones.has(phone)) return false;  // abriu como observador nesta sessão
   const att   = data?.activeAttendant;
   const fresh = isActiveAttendantFresh(data?.activeAttendantAt);
   if (!att || !fresh) return true;       // nenhum atendente ativo → pode registrar
@@ -6418,8 +6434,10 @@ async function touchActiveAttendant(phone) {
 async function assumeAttendant(phone, prefix) {
   const current = getCurrentAttendant();
   if (!current || !phone) return;
+  observerOnlyPhones.delete(phone);  // sair do modo observador antes de assumir
   await touchActiveAttendant(phone);
   _aaRegistered = true;
+  _aaRegisteredConvs = true;
   startActiveAttendantRenewal(phone);
   // Atualiza a barra visualmente de imediato, sem esperar polling
   renderActiveAttendantNotice(prefix, {
