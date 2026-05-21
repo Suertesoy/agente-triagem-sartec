@@ -2573,10 +2573,6 @@
       flex-shrink: 0;
       white-space: nowrap;
     }
-    .card-cat-row .demand-select {
-      flex: 1;
-      min-width: 0;
-    }
     .card-win-time {
       font-size: .58rem;
       font-weight: 700;
@@ -2592,19 +2588,74 @@
     /* ── Linha de ação principal (CTA) ── */
     .card-cta-row { margin: 8px 0 6px; }
 
-    /* ── Linha de rodapé: PF/PJ + Finalizar + Expandir ── */
+    /* ── Toggle PF/PJ ── */
+    .pf-pj-toggle {
+      display: inline-flex;
+      background: rgba(0,0,0,.07);
+      border-radius: 20px;
+      padding: 2px;
+      gap: 1px;
+      flex-shrink: 0;
+    }
+    .pftgl-btn {
+      font-size: .54rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: background .12s, color .12s;
+      white-space: nowrap;
+    }
+    .pftgl-btn.active        { background: var(--brand-navy); color: #fff; }
+    .pftgl-btn:not(.active):hover { background: rgba(26,42,94,.14); color: var(--text-primary); }
+
+    /* ── Linha de rodapé: toggle + Finalizar centralizado + seta ── */
     .card-footer-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
+      gap: 4px;
       padding-top: 7px;
       border-top: 1px solid rgba(0,0,0,.07);
     }
+    .card-footer-row .btn-resolve-inline { justify-self: center; }
     .card-footer-row .card-expand-btn {
-      font-size: .78rem;
+      justify-self: end;
+      font-size: .84rem;
       padding: 3px 9px;
-      opacity: .65;
+      color: var(--brand-navy);
+      opacity: .80;
     }
+    .card-footer-row .card-expand-btn:hover {
+      background: rgba(26,42,94,.08);
+      color: var(--brand-navy);
+      border-color: rgba(26,42,94,.18);
+      opacity: 1;
+    }
+
+    /* ── Categoria como texto puro: remove seta nativa do select ── */
+    .card-cat-row .demand-select {
+      flex: 1;
+      min-width: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background: transparent;
+      border: none;
+      padding: 0 2px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text-secondary);
+      font-size: .67rem;
+      font-weight: 600;
+      outline: none;
+    }
+    .card-cat-row .demand-select:focus { outline: 1px solid rgba(26,42,94,.4); border-radius: 3px; }
 
     /* ── Label "Cliente:" no topo do card ── */
     .client-label {
@@ -3326,9 +3377,15 @@ const _USELESS_MSG = /^(ok|oks|okay|obrigad\w*|obg|valeu|vlw|beleza|blz|tudo bem
 const _GREET_RE = /^(oi+|ol[aá]|hey|hi|bom dia|boa tarde|boa noite|boas|tudo bem|td bem|e a[íi]|eae|opa|hello|\s)+[!.?]?$/i;
 
 function resumoOperacional(c) {
-  // 1. cardTitle manual útil
+  // 1. cardTitle manual útil — remove prefixo de categoria se redundante
   const title = (c.cardTitle || "").trim();
-  if (title.length > 5) return title;
+  if (title.length > 5) {
+    const cats = getCategories();
+    const catNames = Object.values(cats).join("|");
+    const catPfx = catNames ? new RegExp(`^(${catNames})\\s*[—\\-–:]+\\s*`, "i") : null;
+    const stripped = catPfx ? title.replace(catPfx, "").trim() : title;
+    return stripped.length > 4 ? stripped : title;
+  }
 
   // 1.5 Triagem incompleta — prioridade alta
   if (c.status === "triagem_incompleta") {
@@ -3371,20 +3428,32 @@ function resumoOperacional(c) {
   if (fe === "entrega" && end)  return "Pedido com entrega confirmada";
   if (fe === "retirada")        return "Aguardando retirada na loja";
 
-  // 6. Palavras-chave na última mensagem
+  // 6. Palavras-chave na última mensagem — com extração de produto específico
   let lm = (c.lastMessage || "").trim();
   if (!lm && c.history) {
-    const um = [...c.history].reverse().find(m => m.role === "user");
-    if (um && typeof um.content === "string") lm = um.content.trim();
+    const um = [...(c.history || [])].reverse().find(m => m.role === "user" && typeof m.content === "string" && m.content.trim().length > 8);
+    if (um) lm = um.content.trim();
   }
   if (lm && !_USELESS_MSG.test(lm)) {
     const lc = lm.toLowerCase();
-    if (/pdf|foto|imagem|arquivo|lista\s*escolar|foto da/.test(lc))       return "Cliente enviou documento";
-    if (/cancelar|cancela|desistir|não quero/.test(lc))                    return "Cliente quer cancelar";
-    if (/quando|prazo|urgente|precis.*hoje|amanhã/.test(lc))               return "Cliente perguntou sobre prazo";
-    if (/entrega|buscar|retirar|como.*receb/.test(lc))                     return "Confirmar forma de entrega";
-    if (/quanto custa|pre[çc]o|valor|or[çc]amento|quantidad/.test(lc))    return "Aguardando orçamento";
-    if (/confirmei|confirmo|pode.*separar|pode.*enviar|quero/.test(lc))   return "Cliente confirmou pedido";
+
+    // Extrai produto específico mencionado
+    const prodM = lm.match(/(?:agenda|caderno|mochila|estojo|kit|caneta|lápis|régua|pasta|fichário|borracha|tesoura)\s+[\w\s'']{0,30}/i);
+    const prod  = prodM ? prodM[0].trim().replace(/\s+/g, " ") : null;
+
+    if (prod) {
+      if (/entrega|buscar|retirar|envi|como.*receb/.test(lc)) return `Dúvida sobre ${prod.toLowerCase()} e entrega`;
+      if (/quanto custa|pre[çc]o|valor|or[çc]amento/.test(lc)) return `Orçamento para ${prod.toLowerCase()}`;
+      if (/têm|tem|disponível|voc[êe]s|há/.test(lc))           return `Disponibilidade de ${prod.toLowerCase()}`;
+      return `Consulta sobre ${prod.toLowerCase()}`;
+    }
+
+    if (/pdf|foto|imagem|arquivo|lista\s*escolar|foto da/.test(lc))     return "Cliente enviou documento";
+    if (/cancelar|cancela|desistir|não quero/.test(lc))                  return "Cliente quer cancelar";
+    if (/quando|prazo|urgente|precis.*hoje|amanhã/.test(lc))             return "Cliente perguntou sobre prazo";
+    if (/entrega|buscar|retirar|como.*receb/.test(lc))                   return "Confirmar forma de entrega";
+    if (/quanto custa|pre[çc]o|valor|or[çc]amento|quantidad/.test(lc))  return "Aguardando orçamento";
+    if (/confirmei|confirmo|pode.*separar|pode.*enviar|quero/.test(lc)) return "Cliente confirmou pedido";
   }
 
   // 7. demandType + pipeline
@@ -4003,16 +4072,17 @@ function buildCard(c, col, cols) {
 
     <div class="card-zone-footer" onclick="event.stopPropagation()">
       <div class="card-footer-row">
-        <select class="type-select-top ${clientType}"
-          onchange="changeClientType(this,'${esc(c.phone)}')"
-          onclick="event.stopPropagation()"
-          title="${clientType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"} — clique para alterar">
-          <option value="pf"${clientType==="pf"?" selected":""}>PF</option>
-          <option value="pj"${clientType==="pj"?" selected":""}>PJ</option>
-        </select>
+        <div class="pf-pj-toggle" onclick="event.stopPropagation()">
+          <button class="pftgl-btn${clientType==="pf"?" active":""}"
+            onclick="event.stopPropagation();changeClientTypeToggle('${esc(c.phone)}','pf')"
+            title="Pessoa Física">PF</button>
+          <button class="pftgl-btn${clientType==="pj"?" active":""}"
+            onclick="event.stopPropagation();changeClientTypeToggle('${esc(c.phone)}','pj')"
+            title="Pessoa Jurídica">PJ</button>
+        </div>
         ${!isResolved ? `<button class="btn-resolve-inline"
             onclick="event.stopPropagation();quickResolveCard('${esc(c.phone)}')"
-            title="Resolver atendimento">✓ Finalizar</button>` : ""}
+            title="Resolver atendimento">✓ Finalizar</button>` : "<span></span>"}
         <button class="card-expand-btn"
           onclick="event.stopPropagation();toggleCardExpand(event,'${esc(c.phone)}')"
           title="${_expandedCards.has(c.phone) ? 'Ocultar detalhes' : 'Ver detalhes'}">${_expandedCards.has(c.phone) ? "▲" : "▼"}</button>
@@ -4108,6 +4178,10 @@ async function changeStatus(select, phone, clientType) {
     });
     showToast("Status atualizado");
   } catch (e) { console.error("[changeStatus]", e); }
+}
+
+function changeClientTypeToggle(phone, newType) {
+  changeClientType({ value: newType }, phone);
 }
 
 async function changeClientType(select, phone) {
