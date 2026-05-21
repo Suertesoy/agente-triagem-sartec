@@ -3797,17 +3797,9 @@ function buildCard(c, col, cols) {
     else if (c.priorityManual === "media")      cls += " pri-media";
     // "baixa" → sem classe = card branco
   } else {
-    // Sem priorityManual: lógica automática
-    if (isFinalizando) {
-      cls += " card-finalizado";
-    } else if (priority.level === "critica") {
-      cls += " card-critica";
-    } else if (priority.level === "alta") {
-      cls += " pri-alta";
-    } else if (priority.level === "media") {
-      cls += " pri-media";
-    }
-    // Timing só no caminho automático
+    // Sem priorityManual: card neutro/branco — cor só muda com classificação manual
+    if (isFinalizando) cls += " card-finalizado";
+    // Indicadores discretos de timing (borda, não cor dominante)
     if (forgotten)    cls += " forgotten";
     else if (urgent)  cls += " urgent";
     else if (warn10)  cls += " warn-10";
@@ -3824,12 +3816,12 @@ function buildCard(c, col, cols) {
   const cardTitle  = c.cardTitle || "";
   const isManual   = !!c.priorityManual;
   const priBadge   = `<span
-    class="priority-dot ${priority.cls || 'pb-baixa'}${isManual ? ' pri-manual' : ''}"
+    class="priority-dot ${isManual ? (priority.cls || 'pb-baixa') : 'pb-baixa'}${isManual ? ' pri-manual' : ''}"
     role="button" tabindex="0"
     data-phone="${esc(c.phone)}"
     onclick="event.stopPropagation();openPriorityPicker(event,'${esc(c.phone)}')"
-    title="${priority.level === 'nenhuma' ? 'Sem classificação — clique para classificar' : 'Clique para alterar prioridade'}"
-  >${priority.level === 'nenhuma' ? 'Classificar ▾' : priority.label + ' ▾'}</span>`;
+    title="${!isManual ? 'Sem classificação — clique para classificar' : 'Clique para alterar prioridade'}"
+  >${!isManual ? 'Classificar ▾' : priority.label + ' ▾'}</span>`;
 
   // Chip de atendente ativo — exibe somente se for outro atendente e o registro for fresco
   const _cardAtt = c.activeAttendant || null;
