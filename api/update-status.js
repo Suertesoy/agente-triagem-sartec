@@ -35,7 +35,7 @@ async function withSessionLock(redis, phone, fn) {
 }
 
 const VALID_PF = ["novo", "em_atendimento", "orcamento_enviado", "confirmado", "finalizado"];
-const VALID_PJ = ["novo", "cadastro", "em_cotacao", "proposta_enviada", "confirmado", "entregue"];
+const VALID_PJ = ["novo", "em_cotacao", "proposta_enviada", "confirmado", "entregue"];
 
 export default async function handler(req, res) {
   if (req.method !== "PUT") {

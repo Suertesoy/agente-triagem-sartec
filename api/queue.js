@@ -22,6 +22,52 @@ function getRedis() {
 const SESSION_TTL = 60 * 60 * 24 * 90; // 90 dias — retenção mínima de histórico
 const INATIVO_MS  = 2 * 60 * 60 * 1000;  // 2h sem atividade
 
+// ── Gera resumo operacional derivado do histórico (sem chamar IA) ────────────
+const _QUEUE_USELESS = /^(olá?|ola|oi+|hey|hi|bom\s+dia|boa\s+tarde|boa\s+noite|jurídica|juridica|pessoa\s+jurídica|pessoa\s+juridica|ainda\s+não|ainda\s+nao|só|so|somente\s+isso|ok|obrigad|valeu|sim|não|nao|pode|certo|entendi|por\s+favor)[\s!.,?]*$/i;
+const _QUEUE_PROD    = /quadro\s+branco|caneta(?:\s+(?:para|p)\s+quadro)?|agenda|caderno|mochila|estojo|lápis|lapis|borracha|apontador|papel\s+sulfite|sulfite|impressão|impressao|xerox|pilot|bic|resma|bloco/i;
+const _QUEUE_QTY     = /\d+\s*(?:unidades?|un\.?|pcs?|peças?|pecas?)/i;
+const _QUEUE_MEAS    = /\d+\s*[x×]\s*\d+|\d+\s*m\s*[x×]\s*\d+/i;
+const _QUEUE_URGENT  = /urgent|urgência|urgencia|o\s+quanto\s+antes|para\s+hoje|preciso.*hoje|rápido|rapido/i;
+const _QUEUE_NOCAD   = /ainda\s+não|ainda\s+nao|não\s+(?:tenho|temos)\s+cadastro|nao\s+(?:tenho|temos)\s+cadastro|só\s+orçamento|so\s+orcamento|sem\s+cadastro/i;
+
+function buildOperationalSummary(session) {
+  if (session.cardTitle && session.cardTitle.trim().length > 5) return session.cardTitle.trim();
+
+  const history = session.history || [];
+  const isPJ = session.clientType === "pj" || session.demandType === "cotacao_pj";
+
+  const userMsgs = history
+    .filter((m) => m.role === "user" && typeof m.content === "string")
+    .map((m) => m.content.trim())
+    .filter((m) => m.length > 8 && !_QUEUE_USELESS.test(m));
+
+  if (!userMsgs.length) return null;
+
+  const allText  = userMsgs.join(" ");
+  const isUrgent = _QUEUE_URGENT.test(allText);
+  const notCad   = isPJ && _QUEUE_NOCAD.test(allText);
+
+  // Prefere mensagem com produto ou quantidade; senão usa a mais longa
+  const bestMsg = [...userMsgs]
+    .filter((m) => _QUEUE_PROD.test(m) || _QUEUE_QTY.test(m) || m.length > 20)
+    .sort((a, b) => b.length - a.length)[0] || userMsgs[userMsgs.length - 1];
+
+  const cleaned = bestMsg
+    .replace(/^(quero|queria|gostaria\s+de|preciso\s+de|vim\s+pedir|olá?|oi|bom\s+dia|boa\s+tarde|boa\s+noite)[,!.\s]*/gi, "")
+    .replace(/\s+/g, " ").trim();
+
+  let summary = cleaned.substring(0, 60).trim();
+
+  const measMatch = allText.match(_QUEUE_MEAS);
+  if (measMatch && !summary.includes(measMatch[0])) summary += " " + measMatch[0];
+
+  const urgPfx = isUrgent ? "urgente: " : "";
+  const cadCtx = notCad   ? " · empresa não cadastrada" : "";
+  const prefix  = isPJ ? `Cotação PJ ${urgPfx}` : "";
+
+  return `${prefix}${summary}${cadCtx}`.trim().substring(0, 120) || null;
+}
+
 // Janela de 24h
 function computeWindowInfo(session) {
   const now        = Date.now();
@@ -122,17 +168,22 @@ export default async function handler(req, res) {
         session.clientType ||
         (session.demandType === "cotacao_pj" ? "pj" : "pf");
 
+      // Mapear "cadastro" (coluna removida) para "novo" sem alterar Redis
+      let pipelineStatus = session.pipelineStatus || "novo";
+      if (clientType === "pj" && pipelineStatus === "cadastro") pipelineStatus = "novo";
+
       conversations.push({
         phone,
-        clientName:     session.clientName     || "—",
-        demandType:     session.demandType      || "outro",
+        clientName:          session.clientName     || "—",
+        demandType:          session.demandType      || "outro",
         clientType,
-        pipelineStatus: session.pipelineStatus  || "novo",
-        status:         finalStatus,
+        pipelineStatus,
+        status:              finalStatus,
         handoffAt:      session.handoffAt       || null,
         resolvedAt:     session.resolvedAt      || null,
-        cardTitle:      session.cardTitle       || "",
-        lastMessage:    lastMessage.substring(0, 200),
+        cardTitle:           session.cardTitle       || "",
+        operationalSummary:  buildOperationalSummary(session),
+        lastMessage:         lastMessage.substring(0, 200),
         messageCount:   (session.history || []).length,
         priorityManual: session.priorityManual  || null,
         dataLimite:     session.dataLimite      || null,

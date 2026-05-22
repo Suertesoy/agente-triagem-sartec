@@ -3278,7 +3278,6 @@ const PF_COLS = [
 
 const PJ_COLS = [
   { key: "novo",              label: "NOVO",             color: "var(--status-novo)" },
-  { key: "cadastro",          label: "CADASTRO",         color: "var(--status-atend)" },
   { key: "em_cotacao",        label: "EM COTAÇÃO",       color: "var(--status-orc)" },
   { key: "proposta_enviada",  label: "PROPOSTA ENVIADA", color: "var(--status-confirm)" },
   { key: "confirmado",        label: "CONFIRMADO",       color: "var(--status-confirm)" },
@@ -3312,7 +3311,7 @@ const STATUS_LABEL_PF = {
   confirmado:"CONFIRMADO", finalizado:"FINALIZADO", resolvido:"RESOLVIDO",
 };
 const STATUS_LABEL_PJ = {
-  novo:"NOVO", cadastro:"CADASTRO", em_cotacao:"EM COTAÇÃO", proposta_enviada:"PROPOSTA ENVIADA",
+  novo:"NOVO", em_cotacao:"EM COTAÇÃO", proposta_enviada:"PROPOSTA ENVIADA",
   confirmado:"CONFIRMADO", entregue:"ENTREGUE", resolvido:"RESOLVIDO",
 };
 
@@ -3406,6 +3405,11 @@ const _USELESS_MSG = /^(ok|oks|okay|obrigad\w*|obg|valeu|vlw|beleza|blz|tudo bem
 const _GREET_RE = /^(oi+|ol[aá]|hey|hi|bom dia|boa tarde|boa noite|boas|tudo bem|td bem|e a[íi]|eae|opa|hello|\s)+[!.?]?$/i;
 
 function resumoOperacional(c) {
+  // 0. Resumo derivado do histórico (gerado por queue.js — mais rico que lastMessage)
+  if (c.operationalSummary && c.operationalSummary.trim().length > 5) {
+    return c.operationalSummary.trim();
+  }
+
   // 1. cardTitle manual útil — remove prefixo de categoria se redundante
   const title = (c.cardTitle || "").trim();
   if (title.length > 5) {
@@ -4401,6 +4405,21 @@ function buildSummaryHTML(data) {
   const waitStr   = data.handoffAt ? relTime(data.handoffAt) : "—";
   const statusStr = pipelineLabel(data.pipelineStatus, data.clientType);
 
+  // ── Contexto extra: empresa não cadastrada + urgência (detectado do histórico) ──
+  const _modalUserMsgs = (data.history || [])
+    .filter(m => m.role === "user" && typeof m.content === "string")
+    .map(m => m.content.trim()).join(" ");
+  const _isNoCad  = data.clientType === "pj" &&
+    /ainda\s+não|ainda\s+nao|não\s+(?:tenho|temos)\s+cadastro|nao\s+(?:tenho|temos)\s+cadastro|só\s+orçamento|so\s+orcamento|sem\s+cadastro/i.test(_modalUserMsgs);
+  const _isUrgent = /urgent|urgência|urgencia|o\s+quanto\s+antes|para\s+hoje|preciso.*hoje/i.test(_modalUserMsgs);
+  const _hasPrazo = /quando.*entrega|prazo.*entrega|quando.*consegue|quando.*fica.*pronto/i.test(_modalUserMsgs);
+
+  const pjCtxRows = [
+    _isNoCad  ? `<div class="modal-summary-item"><span class="sum-icon">🏢</span><span class="sum-text" style="color:#7c3aed;font-weight:700">Empresa não cadastrada</span></div>` : "",
+    _isUrgent ? `<div class="modal-summary-item"><span class="sum-icon">🔴</span><span class="sum-text" style="color:#b91c1c;font-weight:700">Pedido urgente</span></div>` : "",
+    _hasPrazo ? `<div class="modal-summary-item"><span class="sum-icon">📅</span><span class="sum-text">Cliente perguntou sobre prazo/entrega</span></div>` : "",
+  ].filter(Boolean).join("");
+
   // Contexto operacional extra para triagem incompleta
   const triagemCtx = data.status === "triagem_incompleta"
     ? (data.conversationWindowStatus === "open"
@@ -4414,6 +4433,7 @@ function buildSummaryHTML(data) {
     resumo
       ? `<div class="modal-summary-item modal-summary-highlight"><span class="sum-icon">⚡</span><span class="sum-text">${esc(resumo)}</span></div>`
       : "",
+    pjCtxRows,
     triagemCtx,
     `<div class="modal-summary-item"><span class="sum-icon">🎯</span><span class="sum-text"><span class="sum-label">Pedido:</span>${titleStr}</span></div>`,
     `<div class="modal-summary-item"><span class="sum-icon">⏱</span><span class="sum-text"><span class="sum-label">Aguardando:</span>${waitStr} · ${statusStr}</span></div>`,
@@ -5210,7 +5230,7 @@ async function autoAdvanceAfterHumanReply(phone) {
   if (!conv) return;
   if ((conv.pipelineStatus || "novo") !== "novo") return;
   const clientType   = conv.clientType || "pf";
-  const targetStatus = clientType === "pj" ? "cadastro" : "em_atendimento";
+  const targetStatus = clientType === "pj" ? "em_cotacao" : "em_atendimento";
   try {
     const res = await fetch("/api/update-status", {
       method:  "PUT",
@@ -6377,7 +6397,7 @@ function updateConvsTabBadge() {
 
 const MOB_STAGES = {
   pf: [{key:"novo",label:"Novo"},{key:"em_atendimento",label:"Atendimento"},{key:"orcamento_enviado",label:"Orçamento"},{key:"confirmado",label:"Confirmado"},{key:"finalizado",label:"Finalizado"},{key:"resolvido",label:"Resolvidos"}],
-  pj: [{key:"novo",label:"Novo"},{key:"cadastro",label:"Cadastro"},{key:"em_cotacao",label:"Cotação"},{key:"proposta_enviada",label:"Proposta"},{key:"confirmado",label:"Confirmado"},{key:"entregue",label:"Entregue"},{key:"resolvido",label:"Resolvidos"}],
+  pj: [{key:"novo",label:"Novo"},{key:"em_cotacao",label:"Cotação"},{key:"proposta_enviada",label:"Proposta"},{key:"confirmado",label:"Confirmado"},{key:"entregue",label:"Entregue"},{key:"resolvido",label:"Resolvidos"}],
 };
 let _mobActiveStage = { pf: "novo", pj: "novo" };
 
