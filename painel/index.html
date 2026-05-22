@@ -3466,12 +3466,14 @@ function resumoOperacional(c) {
     const lc = lm.toLowerCase();
 
     // Extrai produto específico — lista completa da operação
-    const _PROD_PAT = "agenda|caderno|mochila|estojo|caneta|l[aá]pis|r[eé]gua|pasta|fich[aá]rio|borracha|apontador|papel sulfite|sulfite|impress[aã]o|xerox|encaderna[cç][aã]o|plastifica[cç][aã]o|material escolar|lista escolar|kit escolar";
+    const _PROD_PAT = "agenda|caderno|mochila|estojo|caneta|l[aá]pis|r[eé]gua|pasta|fich[aá]rio|borracha|apontador|papel sulfite|sulfite|impress[aã]o|xerox|encaderna[cç][aã]o|plastifica[cç][aã]o|material escolar|lista escolar|kit escolar|quadro branco|caneta (?:para |p\\s+)quadro|pilot|bic|resma|bloco(?:\\s+de\\s+notas)?|cola|grampeador|tesoura|envelope|caixa arquivo";
     const prodM = lm.match(new RegExp(`(?:${_PROD_PAT})(?:\\s+[\\w\\s'']{0,28})?`, "i"));
-    const prod  = prodM ? prodM[0].trim().replace(/\s+/g, " ").substring(0, 45) : null;
+    const prod  = prodM ? prodM[0].trim().replace(/\s+/g, " ").substring(0, 50) : null;
 
     if (prod) {
-      const pl = prod.toLowerCase();
+      const pl    = prod.toLowerCase();
+      const isPJ  = c.clientType === "pj" || c.demandType === "cotacao_pj";
+      if (isPJ) return `Cotação PJ — ${pl}`;
       if (/entrega|buscar|retirar|envi|como.*receb|dom[ií]c/.test(lc)) return `Dúvida sobre ${pl} e entrega`;
       if (/quanto custa|pre[çc]o|valor|or[çc]amento/.test(lc))         return `Orçamento para ${pl}`;
       if (/t[eê]m|disponível|tem.*estoque|em estoque|h[aá]/.test(lc))  return `Disponibilidade de ${pl}`;
@@ -3496,7 +3498,7 @@ function resumoOperacional(c) {
     return "Material escolar";
   }
   if (dt === "cotacao_pj") {
-    if (ps === "novo") return "Nova cotação PJ — verificar";
+    if (ps === "novo" || ps === "em_atendimento") return "Nova cotação PJ — verificar solicitação";
     return "Cotação para empresa";
   }
   if (dt === "xerox")   return "Pedido de cópias/impressão";

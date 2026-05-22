@@ -506,11 +506,22 @@ function inferDemandType(history) {
     text.includes("encadernação") || text.includes("encadernacao") ||
     text.includes("plastificação") || text.includes("plastificacao")
   ) return "xerox";
+  // Lista escolar só quando há contexto escolar explícito
   if (
-    text.includes("lista") || text.includes("comprar") || text.includes("preciso de") ||
-    text.includes("quero") || text.includes("itens")
+    text.includes("lista escolar") || text.includes("lista de material") ||
+    text.includes("material escolar") || text.includes("kit escolar") ||
+    (text.includes("lista") && (
+      text.includes("escola") || text.includes("série") || text.includes("serie") ||
+      text.includes("aluno") || text.includes("ano escolar") ||
+      text.includes("colégio") || text.includes("colegio")
+    ))
   ) return "lista";
-  if (text.includes("tem ") || text.includes("vende") || text.includes("produto")) return "produto";
+  // Produto: compras genéricas sem contexto escolar
+  if (
+    text.includes("quero") || text.includes("comprar") || text.includes("preciso de") ||
+    text.includes("itens") || text.includes("tem ") || text.includes("vende") ||
+    text.includes("produto")
+  ) return "produto";
   if (
     text.includes("horário") || text.includes("horario") || text.includes("endereço") ||
     text.includes("endereco") || text.includes("pagamento") || text.includes("entrega") ||
@@ -545,6 +556,11 @@ function detectPJSignals(text) {
     "nota fiscal",
     "faturamento",
     "danfe",
+    // Respostas diretas à pergunta PF/PJ
+    "pessoa jurídica",
+    "pessoa juridica",
+    /\bjurídica\b/,
+    /\bjuridica\b/,
   ];
   return signals.some((s) =>
     typeof s === "string" ? lower.includes(s) : s.test(lower)
@@ -629,6 +645,21 @@ function addMessage(session, role, content, meta = {}) {
     session.status    = "aguardando_humano";
     if (!session.demandType)  session.demandType  = inferDemandType(session.history);
     if (!session.handoffAt)   session.handoffAt   = new Date().toISOString();
+
+    // Se clientType ainda não definido, varre histórico completo do cliente em busca de sinais PJ
+    if (!session.clientType) {
+      const allUserText = session.history
+        .filter(m => m.role === "user" && typeof m.content === "string")
+        .map(m => m.content).join(" ");
+      if (detectPJSignals(allUserText)) {
+        session.clientType = "pj";
+        if (!session.demandType || session.demandType === "produto" || session.demandType === "outro") {
+          session.demandType = "cotacao_pj";
+        }
+        console.log("[Agente] 🏢 clientType=pj inferido do histórico no handoff");
+      }
+    }
+
     if (!session.cardTitle)   session.cardTitle   = generateCardTitle(session);
   }
 
@@ -801,6 +832,29 @@ async function chatWithAgent(phone, userText, mediaPayload = null, name = "", me
         { type: "text", text: userText || "O cliente enviou este arquivo." },
       ]
     : userText;
+
+  // ── Detecta saudação fragmentada quando agente já perguntou PF/PJ ──────────
+  // Evita repetir a pergunta inteira quando cliente manda "Boa noite" após "Olá"
+  if (!session.clientType && !session.handoffDone && !mediaPayload) {
+    const _fragGreetRE = /^(oi+|ol[aá]|hey|hi|bom\s+dia|boa\s+tarde|boa\s+noite|boas|tudo\s+bem|td\s+bem|e\s+a[íi]|eae|opa|hello)[\s!.,?]*$/i;
+    if (_fragGreetRE.test(textToCheck.trim())) {
+      const lastAsst = session.history.slice().reverse()
+        .find(m => m.role === "assistant" && typeof m.content === "string");
+      if (lastAsst?.content?.toLowerCase().includes("pessoa física ou pessoa jurídica")) {
+        const lc = textToCheck.toLowerCase();
+        const ack = lc.includes("noite") ? "Boa noite! 😊" :
+                    lc.includes("tarde") ? "Boa tarde! 😊" :
+                    lc.includes("dia")   ? "Bom dia! 😊" : "Olá! 😊";
+        const shortReply = `${ack} Só para confirmar: você é pessoa física ou pessoa jurídica?`;
+        addMessage(session, "user", userContent, meta);
+        addMessage(session, "assistant", shortReply);
+        await saveSession(phone, session);
+        console.log(`[Agente] 👋 Saudação fragmentada — PF/PJ já perguntado +${phone}`);
+        return shortReply;
+      }
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   addMessage(session, "user", userContent, meta);
 
